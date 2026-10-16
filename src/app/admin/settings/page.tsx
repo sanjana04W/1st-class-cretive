@@ -66,7 +66,7 @@ export default function AdminSettingsPage() {
         <div className="grid grid-cols-2 gap-3">
           {[
             { href: "/", label: "View Home Page" },
-            { href: "/portfolio", label: "View Portfolio" },
+            { href: "/portfolio", label: "View Collection" },
             { href: "/services", label: "View Services" },
             { href: "/contact", label: "View Contact Page" },
           ].map(({ href, label }) => (

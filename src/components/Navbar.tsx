@@ -4,25 +4,35 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Phone, MessageCircle } from "lucide-react";
+import { Menu, X, Phone, MessageCircle, ShoppingBag, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/context/CartContext";
+import { useCustomerProfile } from "@/context/CustomerProfileContext";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/portfolio", label: "Portfolio" },
+  { href: "/portfolio", label: "Collection" },
   { href: "/services", label: "Services" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
+/** Pages that have a full-bleed dark hero at the very top — navbar can be transparent */
+const DARK_HERO_PAGES = ["/"];
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { totalItems, openCart } = useCart();
+  const { profile, isLoggedIn, logoutCustomer } = useCustomerProfile();
+
+  const hasDarkHero = DARK_HERO_PAGES.includes(pathname);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // run once on mount
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -31,47 +41,57 @@ export default function Navbar() {
     setMenuOpen(false);
   }, [pathname]);
 
+  /* ─── Style logic ───
+     - Home page (dark hero): transparent at top → solid on scroll
+     - Every other page: always solid white navbar
+  */
+  const isTransparent = hasDarkHero && !scrolled;
+
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-400",
-        scrolled
-          ? "glass shadow-md py-3"
-          : "bg-transparent py-5"
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        isTransparent
+          ? "bg-transparent py-5"
+          : "bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm py-3"
       )}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
+
+        {/* ── Logo ── */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <Image
             src="/logo.png"
-            alt="1st Class Creative Craft logo"
-            width={120}
+            alt="1st Class Creative"
+            width={130}
             height={50}
-            className="h-12 w-auto object-contain"
+            className={cn(
+              "h-11 w-auto object-contain transition-all duration-300",
+              isTransparent ? "brightness-0 invert" : "brightness-100"
+            )}
             priority
           />
         </Link>
 
-        {/* Desktop links */}
-        <ul className="hidden md:flex items-center gap-8">
+        {/* ── Desktop nav links ── */}
+        <ul className="hidden md:flex items-center gap-7">
           {navLinks.map(({ href, label }) => (
             <li key={href}>
               <Link
                 href={href}
                 className={cn(
-                  "font-body font-medium text-sm tracking-wide transition-colors duration-200 relative group",
+                  "font-medium text-sm tracking-wide transition-colors duration-200 relative group",
                   pathname === href
-                    ? "text-brand-gold"
-                    : scrolled
-                    ? "text-brand-charcoal hover:text-brand-gold"
-                    : "text-white hover:text-brand-gold-light"
+                    ? "text-[#C9A84C] font-semibold"
+                    : isTransparent
+                    ? "text-white hover:text-[#C9A84C]"
+                    : "text-[#2C2C2C] hover:text-[#C9A84C]"
                 )}
               >
                 {label}
                 <span
                   className={cn(
-                    "absolute -bottom-1 left-0 h-0.5 bg-brand-gold rounded transition-all duration-300",
+                    "absolute -bottom-1 left-0 h-0.5 bg-[#C9A84C] rounded transition-all duration-300",
                     pathname === href ? "w-full" : "w-0 group-hover:w-full"
                   )}
                 />
@@ -80,77 +100,188 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          <a
-            href="tel:0740388788"
+        {/* ── Desktop Actions ── */}
+        <div className="hidden md:flex items-center gap-2">
+
+          {/* Cart */}
+          <button
+            onClick={openCart}
+            aria-label="Shopping Cart"
             className={cn(
-              "flex items-center gap-1.5 text-sm font-medium transition-colors",
-              scrolled ? "text-brand-charcoal hover:text-brand-gold" : "text-white hover:text-brand-gold-light"
+              "relative p-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center",
+              isTransparent
+                ? "text-white hover:bg-white/10"
+                : "text-[#2C2C2C] hover:bg-gray-100 hover:text-[#C9A84C]"
             )}
           >
-            <Phone className="w-4 h-4" />
-            074 038 8788
-          </a>
+            <ShoppingBag className="w-5 h-5" />
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#C9A84C] text-white text-[11px] font-bold flex items-center justify-center shadow-sm">
+                {totalItems}
+              </span>
+            )}
+          </button>
+
+          {/* Profile / Sign In */}
+          {isLoggedIn ? (
+            <Link
+              href="/profile"
+              aria-label="My Account"
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all",
+                pathname === "/profile"
+                  ? "bg-[#C9A84C] text-white"
+                  : isTransparent
+                  ? "text-white hover:bg-white/10"
+                  : "text-[#2C2C2C] hover:bg-gray-100 hover:text-[#C9A84C]"
+              )}
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden lg:inline">{profile.name ? profile.name.split(" ")[0] : "Account"}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              aria-label="Sign In"
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all",
+                isTransparent
+                  ? "text-white hover:bg-white/10"
+                  : "text-[#2C2C2C] hover:bg-gray-100 hover:text-[#C9A84C]"
+              )}
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden lg:inline">Sign In</span>
+            </Link>
+          )}
+
+          {/* WhatsApp CTA */}
           <a
             href="https://wa.me/94740388788?text=Hello%2C%20I%20would%20like%20to%20enquire%20about%20your%20products."
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary !py-2.5 !px-5 text-sm"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#C9A84C] hover:bg-[#B3933B] text-white text-xs font-bold shadow-sm transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
-            Order Now
+            WhatsApp
           </a>
         </div>
 
-        {/* Hamburger */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className={cn(
-            "md:hidden p-2 rounded-lg transition-colors",
-            scrolled ? "text-brand-charcoal" : "text-white"
-          )}
-          aria-label="Toggle navigation menu"
-        >
-          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* ── Mobile actions ── */}
+        <div className="flex md:hidden items-center gap-1">
+          <button
+            onClick={openCart}
+            aria-label="Cart"
+            className={cn("relative p-2 rounded-lg", isTransparent ? "text-white" : "text-[#2C2C2C]")}
+          >
+            <ShoppingBag className="w-5 h-5" />
+            {totalItems > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#C9A84C] text-white text-[10px] font-bold flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
+          </button>
+
+          <Link
+            href={isLoggedIn ? "/profile" : "/login"}
+            aria-label="Account"
+            className={cn("p-2 rounded-lg", isTransparent ? "text-white" : "text-[#2C2C2C]")}
+          >
+            <User className="w-5 h-5" />
+          </Link>
+
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className={cn("p-2 rounded-lg", isTransparent ? "text-white" : "text-[#2C2C2C]")}
+            aria-label="Menu"
+          >
+            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* ── Mobile menu ── */}
       <div
         className={cn(
           "md:hidden overflow-hidden transition-all duration-300",
           menuOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="glass border-t border-brand-gold/20 px-4 py-6 space-y-1">
+        <div className="bg-white border-t border-gray-100 px-4 py-4 space-y-1 shadow-lg">
           {navLinks.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
               className={cn(
-                "block py-3 px-4 rounded-xl font-body font-medium text-sm transition-all",
+                "block py-3 px-4 rounded-xl font-medium text-sm transition-all",
                 pathname === href
-                  ? "bg-brand-champagne text-brand-gold font-bold"
-                  : "text-brand-charcoal hover:bg-brand-champagne hover:text-brand-gold"
+                  ? "bg-[#F5EEDC] text-[#9A7A2E] font-bold"
+                  : "text-[#2C2C2C] hover:bg-[#F5EEDC] hover:text-[#9A7A2E]"
               )}
             >
               {label}
             </Link>
           ))}
-          <div className="pt-4 flex flex-col gap-3">
-            <a
-              href="tel:0740388788"
-              className="flex items-center gap-2 text-brand-charcoal py-2 px-4"
+
+          <div className="border-t border-gray-100 pt-3 mt-3 space-y-1">
+            <button
+              onClick={openCart}
+              className="w-full flex items-center justify-between py-3 px-4 rounded-xl text-sm text-[#2C2C2C] hover:bg-[#F5EEDC]"
             >
-              <Phone className="w-4 h-4 text-brand-gold" />
-              <span className="text-sm font-medium">074 038 8788</span>
-            </a>
+              <span className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-[#C9A84C]" />
+                Cart
+              </span>
+              {totalItems > 0 && (
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#C9A84C] text-white">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 py-3 px-4 rounded-xl text-sm text-[#2C2C2C] hover:bg-[#F5EEDC]"
+                >
+                  <User className="w-4 h-4 text-[#C9A84C]" />
+                  My Account ({profile.name?.split(" ")[0]})
+                </Link>
+                <button
+                  onClick={logoutCustomer}
+                  className="w-full flex items-center gap-2 py-3 px-4 rounded-xl text-sm text-red-600 hover:bg-red-50"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="flex items-center gap-2 py-3 px-4 rounded-xl text-sm text-[#2C2C2C] hover:bg-[#F5EEDC]"
+                >
+                  <User className="w-4 h-4 text-[#C9A84C]" />
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="flex items-center gap-2 py-3 px-4 rounded-xl text-sm text-[#2C2C2C] hover:bg-[#F5EEDC]"
+                >
+                  <User className="w-4 h-4 text-[#C9A84C]" />
+                  Create Account
+                </Link>
+              </>
+            )}
+          </div>
+
+          <div className="border-t border-gray-100 pt-3 mt-1">
             <a
-              href="https://wa.me/94740388788?text=Hello%2C%20I%20would%20like%20to%20enquire%20about%20your%20products."
+              href="https://wa.me/94740388788"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary justify-center"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#C9A84C] hover:bg-[#B3933B] text-white text-sm font-bold transition-colors"
             >
               <MessageCircle className="w-4 h-4" />
               WhatsApp Us

@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ShieldCheck,
   ExternalLink,
+  ClipboardList,
 } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { adminSignOut } from "@/lib/auth";
@@ -30,9 +31,10 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin/dashboard", icon: <LayoutDashboard className="w-4 h-4" />, label: "Dashboard" },
-  { href: "/admin/inquiries", icon: <ShoppingBag className="w-4 h-4" />, label: "Orders & Inquiries", badge: "10" },
+  { href: "/admin/orders", icon: <ClipboardList className="w-4 h-4" />, label: "Orders", badge: "NEW" },
+  { href: "/admin/inquiries", icon: <ShoppingBag className="w-4 h-4" />, label: "Inquiries" },
   { href: "/admin/customers", icon: <UserCheck className="w-4 h-4" />, label: "Customers" },
-  { href: "/admin/portfolio", icon: <Sparkles className="w-4 h-4" />, label: "Featured Products" },
+  { href: "/admin/portfolio", icon: <Sparkles className="w-4 h-4" />, label: "Collection Gallery", badge: "89" },
   { href: "/admin/products", icon: <Package className="w-4 h-4" />, label: "Products Catalog" },
   { href: "/admin/categories", icon: <Layers className="w-4 h-4" />, label: "Categories" },
   { href: "/admin/inventory", icon: <Boxes className="w-4 h-4" />, label: "Inventory" },

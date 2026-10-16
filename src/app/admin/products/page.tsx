@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { collectionItems } from "@/lib/portfolio-data";
 
 export interface ProductRecord {
   id: string;
@@ -179,6 +180,8 @@ export default function AdminProductsPage() {
   const [formAllowBackorder, setFormAllowBackorder] = useState(false);
   const [formMadeToOrder, setFormMadeToOrder] = useState(true);
   const [formImage, setFormImage] = useState("/logo.png");
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [mediaPickerSearch, setMediaPickerSearch] = useState("");
 
   const openEditor = (prod: ProductRecord) => {
     setIsCreating(false);
@@ -715,12 +718,22 @@ export default function AdminProductsPage() {
 
             {/* Box 3: Images */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EFECE6] shadow-xs space-y-4">
-              <h3 className="font-heading text-base font-bold text-brand-charcoal">
-                Product Media
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-heading text-base font-bold text-brand-charcoal">
+                  Product Media
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowMediaPicker(true)}
+                  className="px-3.5 py-1.5 rounded-xl border border-[#9A7A2E]/30 bg-[#FBF9F5] hover:bg-[#F5EEDC] text-[#9A7A2E] text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Choose from Collection ({collectionItems.length})</span>
+                </button>
+              </div>
 
               <div className="flex items-center gap-4">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-gray-200 shadow-xs bg-gray-50">
+                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-gray-200 shadow-xs bg-gray-50 shrink-0">
                   <Image
                     src={formImage}
                     alt={formTitle || "Product preview"}
@@ -732,19 +745,117 @@ export default function AdminProductsPage() {
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">
                     IMAGE PATH OR URL
                   </label>
-                  <input
-                    type="text"
-                    value={formImage}
-                    onChange={(e) => setFormImage(e.target.value)}
-                    placeholder="/485184284_1103127648493148_4472142601649408182_n.jpg"
-                    className="w-full text-xs px-4 py-2 border border-gray-200 rounded-xl bg-white shadow-2xs outline-none focus:border-brand-gold font-mono"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formImage}
+                      onChange={(e) => setFormImage(e.target.value)}
+                      placeholder="/485184284_1103127648493148_4472142601649408182_n.jpg"
+                      className="w-full text-xs px-4 py-2 border border-gray-200 rounded-xl bg-white shadow-2xs outline-none focus:border-brand-gold font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaPicker(true)}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-xs font-semibold text-gray-700 rounded-xl whitespace-nowrap"
+                    >
+                      Browse
+                    </button>
+                  </div>
                   <p className="text-[10px] text-gray-400">
-                    Use any existing image from the /public folder or paste a media link.
+                    Directly connected to all {collectionItems.length} studio images in your /public directory.
                   </p>
                 </div>
               </div>
             </div>
+
+            {/* Media Picker Modal */}
+            {showMediaPicker && (
+              <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                    <div>
+                      <h4 className="font-heading text-lg font-bold text-brand-charcoal">
+                        Select from Collection Images
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {collectionItems.length} handcrafted images available
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaPicker(false)}
+                      className="text-gray-400 hover:text-brand-charcoal p-1 rounded-full hover:bg-gray-100"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="my-3">
+                    <input
+                      type="text"
+                      placeholder="Search collection images by title or filename…"
+                      value={mediaPickerSearch}
+                      onChange={(e) => setMediaPickerSearch(e.target.value)}
+                      className="w-full text-xs px-3.5 py-2 rounded-xl border border-gray-200 outline-none focus:border-brand-gold"
+                    />
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-1">
+                    {collectionItems
+                      .filter(
+                        (i) =>
+                          i.title.toLowerCase().includes(mediaPickerSearch.toLowerCase()) ||
+                          i.src.toLowerCase().includes(mediaPickerSearch.toLowerCase())
+                      )
+                      .map((item) => {
+                        const isSelected = formImage === item.src;
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => {
+                              setFormImage(item.src);
+                              setShowMediaPicker(false);
+                              toast.success("Image selected from collection!");
+                            }}
+                            className={cn(
+                              "group relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all",
+                              isSelected
+                                ? "border-[#C9A84C] ring-2 ring-[#C9A84C]/30 shadow-md"
+                                : "border-gray-200 hover:border-[#9A7A2E]"
+                            )}
+                          >
+                            <Image
+                              src={item.src}
+                              alt={item.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform"
+                              sizes="120px"
+                            />
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 bg-[#C9A84C] text-white p-0.5 rounded-full">
+                                <Check className="w-3 h-3" />
+                              </div>
+                            )}
+                            <div className="absolute inset-x-0 bottom-0 bg-black/60 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <p className="text-[9px] text-white truncate font-medium">{item.title}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-100 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaPicker(false)}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-xs font-semibold rounded-xl text-gray-700"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Action Bar */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">

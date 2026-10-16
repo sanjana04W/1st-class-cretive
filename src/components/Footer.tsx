@@ -41,7 +41,7 @@ const footerLinks = [
     heading: "Explore",
     links: [
       { href: "/", label: "Home" },
-      { href: "/portfolio", label: "Portfolio" },
+      { href: "/portfolio", label: "Collection" },
       { href: "/services", label: "Services" },
       { href: "/about", label: "About Us" },
       { href: "/contact", label: "Contact" },

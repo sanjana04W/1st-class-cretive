@@ -24,7 +24,7 @@ const heroSlides = [
     headline: "Crafted for Your Most",
     highlight: "Cherished Moments",
     sub: "Handmade resin creations, wedding invitations & elegant cake boxes — all uniquely yours.",
-    cta: { label: "Explore Portfolio", href: "/portfolio" },
+    cta: { label: "Explore Collection", href: "/portfolio" },
   },
   {
     image: "/484074106_1098277412311505_6713907112004454121_n.jpg",
@@ -244,7 +244,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-12">
             <div>
-              <h2 className="section-heading">Featured Creations</h2>
+              <h2 className="section-heading">Featured Collection</h2>
               <div className="w-16 h-1 bg-brand-gold rounded mt-3" />
             </div>
             <Link href="/portfolio" className="btn-secondary text-sm !py-2.5 !px-5">
@@ -316,7 +316,7 @@ export default function HomePage() {
           </div>
           <div className="text-center mt-10">
             <Link href="/portfolio" className="btn-primary">
-              See Full Portfolio <ArrowRight className="w-5 h-5" />
+              See Full Collection <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>

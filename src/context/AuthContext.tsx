@@ -9,7 +9,7 @@ interface AuthContextValue {
   user: User | null;
   adminUser: AdminUser | null;
   loading: boolean;
-  loginDemoAdmin: () => void;
+  loginDemoAdmin: (email?: string, name?: string) => void;
   logout: () => Promise<void>;
 }
 
@@ -54,24 +54,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  const loginDemoAdmin = () => {
+  const loginDemoAdmin = (adminEmail: string = "admin@lillyumfragrance.lk", adminName: string = "Super Admin") => {
+    const adminUid = "admin-uid-" + adminEmail.replace(/[^a-zA-Z0-9]/g, "-");
     if (typeof window !== "undefined") {
       localStorage.setItem("admin_demo_user", JSON.stringify({
-        uid: "demo-admin-uid",
-        email: "admin@1stclasscreative.lk",
-        name: "Super Admin",
+        uid: adminUid,
+        email: adminEmail,
+        name: adminName,
         role: "owner",
       }));
     }
     setUser({
-      uid: "demo-admin-uid",
-      email: "admin@1stclasscreative.lk",
-      displayName: "Super Admin",
+      uid: adminUid,
+      email: adminEmail,
+      displayName: adminName,
     } as unknown as User);
     setAdminUser({
-      uid: "demo-admin-uid",
-      email: "admin@1stclasscreative.lk",
-      name: "Super Admin",
+      uid: adminUid,
+      email: adminEmail,
+      name: adminName,
       role: "owner",
       isActive: true,
       createdAt: new Date(),

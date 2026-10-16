@@ -136,7 +136,7 @@ export default function AboutPage() {
             ))}
           </div>
           <div className="text-center mt-10">
-            <Link href="/portfolio" className="btn-primary">View Full Portfolio</Link>
+            <Link href="/portfolio" className="btn-primary">View Full Collection</Link>
           </div>
         </div>
       </section>

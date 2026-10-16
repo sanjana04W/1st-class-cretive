@@ -21,29 +21,21 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { loginDemoAdmin } = useAuth();
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginForm>({
-    defaultValues: {
-      email: "admin@1stclasscreative.lk",
-      password: "admin123456",
-    },
-  });
-
-  const handleQuickLogin = () => {
-    loginDemoAdmin();
-    toast.success("Welcome back, Super Admin!");
-    router.replace("/admin/dashboard");
-  };
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
 
   const onSubmit = async ({ email, password }: LoginForm) => {
     setLoading(true);
     try {
-      const cleanEmail = email.trim();
+      const cleanEmail = email.trim().toLowerCase();
       const cleanPassword = password.trim();
 
-      // Demo credentials fallback for local testing & preview
-      if (cleanEmail === "admin@1stclasscreative.lk" && cleanPassword === "admin123456") {
-        loginDemoAdmin();
-        toast.success("Welcome back, Super Admin!");
+      // Configured admin credentials
+      if (
+        (cleanEmail === "admin@lillyumfragrance.lk" && cleanPassword === "Lillyum@Admin2025") ||
+        (cleanEmail === "admin@1stclasscreative.lk" && (cleanPassword === "admin123456" || cleanPassword === "Lillyum@Admin2025"))
+      ) {
+        loginDemoAdmin(cleanEmail, "Admin Manager");
+        toast.success("Welcome back, Administrator!");
         router.replace("/admin/dashboard");
         return;
       }
@@ -52,11 +44,12 @@ export default function AdminLoginPage() {
       toast.success("Welcome back!");
       router.replace("/admin/dashboard");
     } catch {
-      toast.error("Invalid credentials. Try: admin@1stclasscreative.lk / admin123456");
+      toast.error("Invalid email or password.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-brand-charcoal flex items-center justify-center px-4">
@@ -79,18 +72,7 @@ export default function AdminLoginPage() {
             <p className="text-gray-400 text-sm mt-1">Authorised personnel only</p>
           </div>
 
-          <div className="mb-6 bg-brand-champagne/60 border border-brand-gold/30 rounded-xl p-4 text-xs text-brand-charcoal">
-            <p className="font-bold text-brand-gold-dark mb-1">🔑 Default Admin Credentials:</p>
-            <p className="font-mono select-all"><strong>Email:</strong> admin@1stclasscreative.lk</p>
-            <p className="font-mono select-all"><strong>Password:</strong> admin123456</p>
-            <button
-              type="button"
-              onClick={handleQuickLogin}
-              className="mt-3 w-full py-2 px-3 bg-brand-gold hover:bg-brand-gold-dark text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-            >
-              ⚡ 1-Click Instant Sign In
-            </button>
-          </div>
+
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
