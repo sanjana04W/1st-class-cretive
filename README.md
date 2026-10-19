@@ -264,8 +264,6 @@ The research document identifies these items as open questions:
   <sub>Project proposal by Wenuri Sanjana · 1st Class Creative</sub>
 
 </div>
-'''
 
-path = Path("/mnt/data/README.md")
-path.write_text(readme, encoding="utf-8")
-print(f"Created {path} ({len(readme.splitlines())} lines, {path.stat().st_size} bytes)")
+
+
