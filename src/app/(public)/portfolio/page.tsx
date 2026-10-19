@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { X, ShoppingBag, Eye, Check, Sparkles } from "lucide-react";
 import { collectionItems, categoryLabels, type CollectionCategory, type CollectionItem } from "@/lib/portfolio-data";
+import { useLiveProducts } from "@/lib/live-products";
 import { cn, formatLKR } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 
@@ -25,13 +26,14 @@ function PortfolioContent() {
   const [activeCat, setActiveCat] = useState(initialCat);
   const [lightbox, setLightbox] = useState<null | CollectionItem>(null);
   const { addToCart } = useCart();
+  const { products: liveItems } = useLiveProducts();
 
   const filtered = useMemo(
     () =>
       activeCat === "all"
-        ? collectionItems
-        : collectionItems.filter((i) => i.category === activeCat),
-    [activeCat]
+        ? liveItems
+        : liveItems.filter((i) => i.category === activeCat),
+    [activeCat, liveItems]
   );
 
   return (
@@ -299,6 +301,8 @@ function PortfolioContent() {
 }
 
 export default function PortfolioPage() {
+  const { products: liveItems } = useLiveProducts();
+
   return (
     <>
       {/* Page hero */}
@@ -311,7 +315,7 @@ export default function PortfolioPage() {
           <h1 className="font-heading text-5xl md:text-6xl font-bold text-white">Our Collection</h1>
           <div className="gold-divider" />
           <p className="text-gray-300 text-lg">
-            Browse our complete collection of {collectionItems.length} handcrafted resin creations, wedding stationery, cake boxes and custom frames.
+            Browse our complete collection of {liveItems.length} handcrafted resin creations, wedding stationery, cake boxes and custom frames.
           </p>
         </div>
       </div>

@@ -15,33 +15,34 @@ import {
   Clock,
 } from "lucide-react";
 import { featuredItems, portfolioItems, categoryLabels, type PortfolioCategory } from "@/lib/portfolio-data";
+import { useLiveProducts } from "@/lib/live-products";
 import { cn } from "@/lib/utils";
 
 // ── Hero Slides ──────────────────────────────────────────────────────────────
 const heroSlides = [
   {
-    image: "/529179520_1214465350692710_3362134301413191237_n.jpg",
+    image: "/hero/hero-1.jpg",
     headline: "Crafted for Your Most",
     highlight: "Cherished Moments",
     sub: "Handmade resin creations, wedding invitations & elegant cake boxes — all uniquely yours.",
     cta: { label: "Explore Collection", href: "/portfolio" },
   },
   {
-    image: "/484074106_1098277412311505_6713907112004454121_n.jpg",
+    image: "/hero/hero-2.jpg",
     headline: "Bespoke Wedding",
     highlight: "Stationery & Cake Boxes",
     sub: "From elegant invitations to beautifully crafted cake boxes — tell your love story in style.",
     cta: { label: "View Wedding Collection", href: "/portfolio?cat=wedding-invitations" },
   },
   {
-    image: "/542752181_1238639424941969_1583669488507158905_n.jpg",
+    image: "/hero/hero-3.jpg",
     headline: "Personalised Resin",
     highlight: "Keychains & Gifts",
     sub: "Custom name keychains, letter charms and unique resin art — perfect gifts for every occasion.",
     cta: { label: "See Keychains", href: "/portfolio?cat=keychains" },
   },
   {
-    image: "/626581418_1362772269195350_2007381266795301988_n.jpg",
+    image: "/hero/hero-4.jpg",
     headline: "Custom Photo Frames",
     highlight: "& Memory Boxes",
     sub: "Preserve your precious memories in one-of-a-kind handcrafted frames.",
@@ -124,11 +125,13 @@ export default function HomePage() {
   const prevHero = () => setHeroIndex((p) => (p - 1 + heroSlides.length) % heroSlides.length);
   const nextHero = () => setHeroIndex((p) => (p + 1) % heroSlides.length);
 
-  // Featured items for the grid
-  const featured = featuredItems.slice(0, 8);
+  const { products: liveProducts, featured: liveFeatured } = useLiveProducts();
 
-  // Recent / gallery items
-  const recent = portfolioItems.slice(0, 12);
+  // Featured items for the grid (live reactive to admin featured toggles)
+  const featured = (liveFeatured.length > 0 ? liveFeatured : featuredItems).slice(0, 8);
+
+  // Recent / gallery items (live reactive to admin edits)
+  const recent = (liveProducts.length > 0 ? liveProducts : portfolioItems).slice(0, 12);
 
   return (
     <>

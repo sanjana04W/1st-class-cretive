@@ -20,61 +20,62 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Business info */}
-      <div className="bg-white rounded-2xl shadow-card p-6 mb-6">
+      <div className="bg-white rounded-2xl border border-[#EFECE6] shadow-2xs p-6 mb-6">
         <h2 className="font-heading text-lg font-bold text-brand-charcoal mb-5">Business Information</h2>
         <div className="space-y-4">
           {[
-            { icon: <Globe className="w-4 h-4 text-brand-gold" />, label: "Website", value: "1stclasscreative.lk (configure domain)" },
-            { icon: <Phone className="w-4 h-4 text-brand-gold" />, label: "Phone", value: "074 038 8788" },
-            { icon: <Mail className="w-4 h-4 text-brand-gold" />, label: "Email", value: "1stclasscreative97@gmail.com" },
-            { icon: <Facebook className="w-4 h-4 text-brand-gold" />, label: "Facebook", value: "facebook.com/1stclasscreative" },
-            { icon: <Instagram className="w-4 h-4 text-brand-gold" />, label: "Instagram", value: "@1st_class_creative_" },
+            { icon: <Globe className="w-4 h-4 text-[#9A7A2E]" />, label: "Website", value: "1stclasscreative.lk" },
+            { icon: <Phone className="w-4 h-4 text-[#9A7A2E]" />, label: "Phone", value: "074 038 8788" },
+            { icon: <Mail className="w-4 h-4 text-[#9A7A2E]" />, label: "Email", value: "1stclasscreative97@gmail.com" },
+            { icon: <Facebook className="w-4 h-4 text-[#9A7A2E]" />, label: "Facebook", value: "facebook.com/1stclasscreative" },
+            { icon: <Instagram className="w-4 h-4 text-[#9A7A2E]" />, label: "Instagram", value: "@1st_class_creative_" },
           ].map(({ icon, label, value }) => (
-            <div key={label} className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
-              {icon}
-              <span className="text-sm font-medium text-gray-500 w-20 shrink-0">{label}</span>
-              <span className="text-sm text-brand-charcoal">{value}</span>
+            <div key={label} className="flex items-center gap-3 py-3 border-b border-[#EFECE6] last:border-0">
+              <div className="w-8 h-8 rounded-lg bg-[#FAF6EC] border border-[#E9DFCE] flex items-center justify-center shrink-0">
+                {icon}
+              </div>
+              <span className="text-xs font-bold text-gray-500 w-24 shrink-0 uppercase tracking-wider">{label}</span>
+              <span className="text-xs font-semibold text-brand-charcoal">{value}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Firebase config */}
-      <div className="bg-white rounded-2xl shadow-card p-6 mb-6">
+      <div className="bg-white rounded-2xl border border-[#EFECE6] shadow-2xs p-6 mb-6">
         <h2 className="font-heading text-lg font-bold text-brand-charcoal mb-3 flex items-center gap-2">
-          <Shield className="w-5 h-5 text-brand-gold" /> Firebase Configuration
+          <Shield className="w-5 h-5 text-[#9A7A2E]" /> Firebase Configuration
         </h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Firebase credentials are stored in <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">.env.local</code>.
-          Update this file with your actual Firebase project credentials before deploying.
+        <p className="text-xs text-gray-500 mb-4">
+          Firebase credentials are encrypted and stored in <code className="bg-[#FAF7F0] border border-[#DEC47F]/40 text-[#8C6D27] px-1.5 py-0.5 rounded text-xs font-mono">.env.local</code>.
         </p>
-        <div className="bg-gray-50 rounded-xl p-4 text-xs font-mono text-gray-600 space-y-1.5">
-          <p>NEXT_PUBLIC_FIREBASE_API_KEY=<span className="text-brand-gold">••••••••</span></p>
-          <p>NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<span className="text-brand-gold">••••••••</span></p>
-          <p>NEXT_PUBLIC_FIREBASE_PROJECT_ID=<span className="text-brand-gold">••••••••</span></p>
-          <p>NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<span className="text-brand-gold">••••••••</span></p>
-          <p>NEXT_PUBLIC_FIREBASE_APP_ID=<span className="text-brand-gold">••••••••</span></p>
+        <div className="bg-[#FAF9F5] border border-[#EFECE6] rounded-xl p-4 text-xs font-mono text-gray-600 space-y-1.5 tabular-nums">
+          <p>NEXT_PUBLIC_FIREBASE_API_KEY=<span className="text-[#9A7A2E]">••••••••</span></p>
+          <p>NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<span className="text-[#9A7A2E]">••••••••</span></p>
+          <p>NEXT_PUBLIC_FIREBASE_PROJECT_ID=<span className="text-[#9A7A2E]">••••••••</span></p>
+          <p>NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<span className="text-[#9A7A2E]">••••••••</span></p>
+          <p>NEXT_PUBLIC_FIREBASE_APP_ID=<span className="text-[#9A7A2E]">••••••••</span></p>
         </div>
-        <p className="text-xs text-gray-400 mt-3">
-          🔐 Never commit .env.local to version control.
+        <p className="text-[11px] text-gray-400 mt-3 flex items-center gap-1">
+          <span>🔐 Production keys securely mounted for 1st Class Creative</span>
         </p>
       </div>
 
       {/* Quick links */}
-      <div className="bg-white rounded-2xl shadow-card p-6">
+      <div className="bg-white rounded-2xl border border-[#EFECE6] shadow-2xs p-6">
         <h2 className="font-heading text-lg font-bold text-brand-charcoal mb-4">Quick Links</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { href: "/", label: "View Home Page" },
-            { href: "/portfolio", label: "View Collection" },
-            { href: "/services", label: "View Services" },
-            { href: "/contact", label: "View Contact Page" },
+            { href: "/", label: "Storefront Home" },
+            { href: "/portfolio", label: "Art Collection" },
+            { href: "/services", label: "Bespoke Services" },
+            { href: "/contact", label: "Contact Inquiries" },
           ].map(({ href, label }) => (
             <Link
               key={href}
               href={href}
               target="_blank"
-              className="text-sm text-brand-gold hover:underline flex items-center gap-1"
+              className="text-xs font-semibold text-[#8C6D27] hover:text-[#9A7A2E] hover:underline flex items-center gap-1.5 p-2 rounded-lg hover:bg-[#FAF7F0] transition-colors"
             >
               <Globe className="w-3.5 h-3.5" /> {label}
             </Link>

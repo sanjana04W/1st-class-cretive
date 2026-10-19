@@ -10,6 +10,7 @@ import {
   type CollectionCategory,
   type CollectionItem,
 } from "@/lib/portfolio-data";
+import { useLiveProducts } from "@/lib/live-products";
 import { formatLKR, cn } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import {
@@ -34,19 +35,20 @@ interface PageProps {
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
   const { addToCart } = useCart();
+  const { products: liveItems } = useLiveProducts();
 
-  // Find product by slug or id
-  const product: CollectionItem | undefined = collectionItems.find(
-    (i) => i.slug === slug || i.id === slug
-  );
+  // Find product by slug or id from live items
+  const product: CollectionItem | undefined =
+    liveItems.find((i) => i.slug === slug || i.id === slug) ||
+    collectionItems.find((i) => i.slug === slug || i.id === slug);
 
   if (!product) {
     notFound();
   }
 
   // Related products from same category
-  const relatedProducts = collectionItems
-    .filter((i) => i.category === product.category && i.id !== product.id)
+  const relatedProducts = (liveItems.length > 0 ? liveItems : collectionItems)
+    .filter((i) => product && i.category === product.category && i.id !== product.id)
     .slice(0, 4);
 
   // Gallery images (main image + alternative thumbnails)

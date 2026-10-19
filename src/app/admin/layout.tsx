@@ -1,130 +1,246 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
   LayoutDashboard,
   ShoppingBag,
-  Users,
-  Sparkles,
-  Database,
   Package,
-  Layers,
-  Boxes,
-  UserCheck,
-  Truck,
-  FileText,
   Star,
-  BarChart3,
+  Sliders,
+  Boxes,
+  Tag,
+  BarChart2,
+  Clock,
+  Users,
+  MessageSquare,
   Settings,
+  Shield,
+  ExternalLink,
   LogOut,
   ChevronRight,
-  ShieldCheck,
-  ExternalLink,
-  ClipboardList,
+  Truck,
+  Quote,
 } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { adminSignOut } from "@/lib/auth";
+import AdminTopbar from "@/components/admin/AdminTopbar";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/admin/dashboard", icon: <LayoutDashboard className="w-4 h-4" />, label: "Dashboard" },
-  { href: "/admin/orders", icon: <ClipboardList className="w-4 h-4" />, label: "Orders", badge: "NEW" },
-  { href: "/admin/inquiries", icon: <ShoppingBag className="w-4 h-4" />, label: "Inquiries" },
-  { href: "/admin/customers", icon: <UserCheck className="w-4 h-4" />, label: "Customers" },
-  { href: "/admin/portfolio", icon: <Sparkles className="w-4 h-4" />, label: "Collection Gallery", badge: "89" },
-  { href: "/admin/products", icon: <Package className="w-4 h-4" />, label: "Products Catalog" },
-  { href: "/admin/categories", icon: <Layers className="w-4 h-4" />, label: "Categories" },
-  { href: "/admin/inventory", icon: <Boxes className="w-4 h-4" />, label: "Inventory" },
-  { href: "/admin/promotions", icon: <Database className="w-4 h-4" />, label: "Promotions & Offers" },
-  { href: "/admin/delivery", icon: <Truck className="w-4 h-4" />, label: "Delivery & COD" },
-  { href: "/admin/testimonials", icon: <Star className="w-4 h-4" />, label: "Reviews & Feedback" },
-  { href: "/admin/reports", icon: <BarChart3 className="w-4 h-4" />, label: "Reports & Analytics" },
-  { href: "/admin/settings", icon: <Settings className="w-4 h-4" />, label: "Settings" },
+const NAV_ITEMS = [
+  {
+    href: "/admin/dashboard",
+    icon: LayoutDashboard,
+    label: "Dashboard",
+  },
+  {
+    href: "/admin/orders",
+    icon: ShoppingBag,
+    label: "Order Management",
+    badge: "2",
+  },
+  {
+    href: "/admin/products",
+    icon: Package,
+    label: "Product Catalog",
+  },
+  {
+    href: "/admin/featured",
+    icon: Star,
+    label: "Featured Products",
+  },
+  {
+    href: "/admin/categories",
+    icon: Sliders,
+    label: "Master Data",
+  },
+  {
+    href: "/admin/inventory",
+    icon: Boxes,
+    label: "Stock & Inventory",
+  },
+  {
+    href: "/admin/promotions",
+    icon: Tag,
+    label: "Promotions & Offers",
+  },
+  {
+    href: "/admin/reports",
+    icon: BarChart2,
+    label: "Analytics",
+  },
+  {
+    href: "/admin/testimonials",
+    icon: Quote,
+    label: "Testimonials",
+  },
+  {
+    href: "/admin/delivery",
+    icon: Truck,
+    label: "Delivery & Shipping",
+  },
+  {
+    href: "/admin/audit-logs",
+    icon: Clock,
+    label: "Audit Logs",
+  },
+  {
+    href: "/admin/customers",
+    icon: Users,
+    label: "User Management",
+  },
+  {
+    href: "/admin/inquiries",
+    icon: MessageSquare,
+    label: "Messages",
+  },
+  {
+    href: "/admin/settings",
+    icon: Settings,
+    label: "System Settings",
+  },
 ];
 
+import {
+  AdminRoleType,
+  getActiveAdminRole,
+  ROLE_PERMISSIONS,
+} from "@/lib/admin-store";
+
 function AdminSidebar() {
-  const { adminUser, logout } = useAuth();
+  const { logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState<AdminRoleType>("Owner");
+
+  useEffect(() => {
+    setRole(getActiveAdminRole());
+    const handleRoleChanged = (e: any) => {
+      setRole(e.detail || getActiveAdminRole());
+    };
+    window.addEventListener("admin_role_changed", handleRoleChanged);
+    return () => window.removeEventListener("admin_role_changed", handleRoleChanged);
+  }, []);
 
   const handleSignOut = async () => {
     await logout();
     router.push("/admin/login");
   };
 
+  const roleConfig = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS["Owner"];
+  const visibleNavItems = NAV_ITEMS.filter((item) => roleConfig.allowedPaths.includes(item.href));
+
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-[#FAFAF8] border-r border-[#EFECE6] min-h-screen">
-      {/* Logo & Header */}
-      <div className="p-4 border-b border-[#EFECE6] flex items-center justify-between bg-white">
-        <Link href="/" target="_blank" className="flex items-center gap-2 group">
-          <div className="p-1 rounded-lg bg-brand-charcoal flex items-center justify-center">
+    <aside className="w-64 bg-white border-r border-[#EFECE6] flex flex-col min-h-screen shrink-0 select-none">
+      {/* Brand & Logo Header */}
+      <div className="p-5 border-b border-[#EFECE6]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#FAF6EC] border border-[#E9DFCE] flex items-center justify-center p-1.5 shrink-0 shadow-2xs">
             <Image
               src="/logo.png"
-              alt="1st Class Creative"
-              width={90}
-              height={32}
-              className="h-8 w-auto object-contain brightness-150"
+              alt="Logo"
+              width={36}
+              height={36}
+              className="object-contain"
             />
           </div>
           <div className="leading-tight">
-            <span className="block font-heading font-bold text-xs text-brand-charcoal group-hover:text-brand-gold transition-colors">
-              1st Class Creative
-            </span>
-            <span className="text-[10px] text-gray-400">Craft Studio</span>
-          </div>
-        </Link>
-        <span className="text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold-dark">
-          Admin
-        </span>
-      </div>
-
-      {/* Nav List */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map(({ href, icon, label, badge }) => {
-          const isActive = pathname === href || (href !== "/admin/dashboard" && pathname?.startsWith(href));
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150",
-                isActive
-                  ? "bg-[#F5EEDC] text-[#9A7A2E] font-bold shadow-xs"
-                  : "text-gray-600 hover:bg-[#F2EFE9] hover:text-brand-charcoal"
-              )}
-            >
-              <span className={cn(isActive ? "text-[#9A7A2E]" : "text-gray-500")}>{icon}</span>
-              <span className="flex-1 truncate">{label}</span>
-              {badge && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                  {badge}
-                </span>
-              )}
-              {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#9A7A2E]" />}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User profile & Logout */}
-      <div className="p-4 border-t border-[#EFECE6] bg-[#F7F5F0]">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-brand-gold text-white font-bold flex items-center justify-center text-xs">
-            {adminUser?.name?.[0] ?? "1"}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-brand-charcoal truncate">{adminUser?.name ?? "1st Class Owner"}</p>
-            <p className="text-[10px] text-gray-500 capitalize">{adminUser?.role ?? "Owner"}</p>
+            <h2 className="font-heading font-black text-xs tracking-wider text-brand-charcoal uppercase">
+              1st Class
+            </h2>
+            <h3 className="font-heading font-black text-xs tracking-wider text-brand-charcoal uppercase -mt-0.5">
+              Creative
+            </h3>
+            <p className="text-[9px] font-semibold tracking-wider text-gray-400 uppercase mt-0.5">
+              OPERATIONS CONTROL PANEL
+            </p>
           </div>
         </div>
+      </div>
+
+      {/* Nav Section */}
+      <div className="flex-1 px-3 py-4 overflow-y-auto space-y-6">
+        <div>
+          <div className="flex items-center justify-between px-3 mb-2">
+            <p className="text-[11px] font-bold tracking-wider text-[#A78335] uppercase">
+              NAVIGATION
+            </p>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#FAF7F0] text-[#9A7A2E] border border-[#E9DFCE] uppercase">
+              {role}
+            </span>
+          </div>
+          <nav className="space-y-1">
+            {visibleNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/admin/dashboard" && pathname?.startsWith(item.href));
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 relative",
+                    isActive
+                      ? "bg-[#FAF3E0] text-[#8C6D27] border border-[#DEC47F] shadow-2xs font-bold"
+                      : "text-gray-600 hover:bg-[#FAF8F5] hover:text-brand-charcoal border border-transparent"
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "w-4 h-4 shrink-0",
+                      isActive ? "text-[#8C6D27]" : "text-gray-400 group-hover:text-gray-600"
+                    )}
+                  />
+                  <span className="flex-1 truncate">{item.label}</span>
+                  {item.badge && (
+                    <span className="w-4 h-4 rounded-full bg-[#B88928] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Sidebar Footer matching Active Role */}
+      <div className="p-3 border-t border-[#EFECE6] space-y-2 bg-[#FAF9F5]">
+        {/* Role access badge */}
+        <div
+          className={cn(
+            "flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-wider shadow-2xs",
+            role === "Owner"
+              ? "bg-white border-[#E9DFCE] text-brand-charcoal"
+              : role === "Manager"
+              ? "bg-[#FAF7F0] border-[#DEC47F] text-[#8C6D27]"
+              : "bg-blue-50/50 border-blue-200 text-blue-700"
+          )}
+        >
+          <Shield className="w-3.5 h-3.5 text-brand-gold-dark" />
+          <span className="truncate">{role === "Owner" ? "FULL OWNER ACCESS" : `${role.toUpperCase()} ACCESS`}</span>
+        </div>
+
+        {/* Visit online store */}
+        <Link
+          href="/"
+          target="_blank"
+          className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white border border-[#EFECE6] text-xs font-semibold text-gray-700 hover:text-brand-charcoal hover:bg-gray-50 transition-colors shadow-2xs"
+        >
+          <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
+          <span>Visit Online Store</span>
+        </Link>
+
+        {/* Logout */}
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 text-xs font-semibold text-rose-600 hover:text-rose-700 py-1.5 px-2 rounded-lg hover:bg-rose-50 w-full transition-colors"
+          className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-xl bg-rose-50 border border-rose-100 text-xs font-bold text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition-colors"
         >
-          <LogOut className="w-3.5 h-3.5" /> Log Out
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Logout</span>
         </button>
       </div>
     </aside>
@@ -135,28 +251,79 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [role, setRole] = useState<AdminRoleType>("Owner");
+
+  useEffect(() => {
+    setRole(getActiveAdminRole());
+    const handleRoleChanged = (e: any) => {
+      setRole(e.detail || getActiveAdminRole());
+    };
+    window.addEventListener("admin_role_changed", handleRoleChanged);
+    return () => window.removeEventListener("admin_role_changed", handleRoleChanged);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user && pathname !== "/admin/login") {
       router.replace("/admin/login");
+      return;
     }
-  }, [user, loading, pathname, router]);
+
+    // Role-based route guard
+    if (pathname && pathname !== "/admin/login" && pathname !== "/admin/dashboard") {
+      const roleConfig = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS["Owner"];
+      const isAllowed = roleConfig.allowedPaths.some(
+        (p) => pathname === p || pathname.startsWith(p + "/")
+      );
+      if (!isAllowed) {
+        router.replace("/admin/dashboard");
+      }
+    }
+  }, [user, loading, pathname, router, role]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-cream">
-        <div className="flex flex-col items-center gap-4">
-          <svg className="animate-spin w-10 h-10 text-brand-gold" fill="none" viewBox="0 0 24 24">
+      <div className="min-h-screen flex items-center justify-center bg-[#FBF9F5]">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="animate-spin w-8 h-8 text-[#9A7A2E]" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
           </svg>
-          <p className="text-gray-400 text-sm">Loading…</p>
+          <p className="text-gray-500 text-xs font-semibold">Loading Control Panel…</p>
         </div>
       </div>
     );
   }
 
   if (!user && pathname !== "/admin/login") return null;
+
+  // Render role restricted message if accessing forbidden route
+  if (pathname && pathname !== "/admin/login") {
+    const roleConfig = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS["Owner"];
+    const isAllowed = roleConfig.allowedPaths.some(
+      (p) => pathname === p || pathname.startsWith(p + "/")
+    );
+    if (!isAllowed) {
+      return (
+        <div className="p-12 text-center max-w-lg mx-auto space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto shadow-2xs">
+            <Shield className="w-7 h-7 text-[#9A7A2E]" />
+          </div>
+          <h2 className="font-heading font-serif text-2xl font-bold text-brand-charcoal">
+            Restricted Section
+          </h2>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Your current role (<strong className="text-brand-charcoal">{role}</strong>) does not have access permissions for this section. Full administrative access is reserved for the <strong>Owner</strong>.
+          </p>
+          <button
+            onClick={() => router.push("/admin/dashboard")}
+            className="px-5 py-2 rounded-xl bg-[#9A7A2E] text-white text-xs font-bold hover:bg-[#856722] transition-colors shadow-2xs"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      );
+    }
+  }
 
   return <>{children}</>;
 }
@@ -165,17 +332,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const isLoginPage = pathname === "/admin/login";
 
+  // Derive topbar title from path
+  const getPageTitle = () => {
+    if (pathname.includes("/orders")) return "Order Management";
+    if (pathname.includes("/products")) return "Product Catalog";
+    if (pathname.includes("/featured")) return "Featured Products";
+    if (pathname.includes("/categories")) return "Master Data";
+    if (pathname.includes("/inventory")) return "Inventory Management";
+    if (pathname.includes("/promotions")) return "Promotions & Offers";
+    if (pathname.includes("/reports")) return "Analytics";
+    if (pathname.includes("/testimonials")) return "Testimonials";
+    if (pathname.includes("/delivery")) return "Delivery & Shipping";
+    if (pathname.includes("/audit-logs")) return "Audit Logs";
+    if (pathname.includes("/customers") || pathname.includes("/users")) return "User Management";
+    if (pathname.includes("/inquiries") || pathname.includes("/messages")) return "Messages";
+    if (pathname.includes("/settings")) return "System Settings";
+    return "Dashboard";
+  };
+
+
   return (
     <AuthProvider>
       <AdminGuard>
         {isLoginPage ? (
           <>{children}</>
         ) : (
-          <div className="flex min-h-screen bg-gray-50">
+          <div className="flex min-h-screen bg-[#FBF9F5] text-brand-charcoal font-body antialiased">
             <AdminSidebar />
-            <main className="flex-1 overflow-auto">
-              {children}
-            </main>
+            <div className="flex-1 flex flex-col min-w-0">
+              <AdminTopbar title={getPageTitle()} />
+              <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+                {children}
+              </main>
+            </div>
           </div>
         )}
       </AdminGuard>

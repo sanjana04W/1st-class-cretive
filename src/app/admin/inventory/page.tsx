@@ -1,86 +1,231 @@
 "use client";
 
-import { useState } from "react";
-import { Boxes, AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Boxes,
+  AlertTriangle,
+  Plus,
+  Minus,
+  PackagePlus,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import {
+  AdminProduct,
+  getAdminProducts,
+  saveAdminProducts,
+  INITIAL_STOCK_ALERTS,
+} from "@/lib/admin-store";
 import toast from "react-hot-toast";
 
-const initialStock = [
-  { item: "Clear Epoxy Resin & Hardener (A+B Kit)", category: "Raw Materials", qty: "14 kg", status: "Adequate" },
-  { item: "Glitter Pigments & Chunky Flakes Set", category: "Raw Materials", qty: "32 bottles", status: "Adequate" },
-  { item: "Alphabet Metal Keychain Rings (Gold/Silver)", category: "Hardware", qty: "140 pcs", status: "Adequate" },
-  { item: "Silicone Alphabet & Number Molds", category: "Tools", qty: "18 pcs", status: "Adequate" },
-  { item: "Ivory Pearl Cardstock (300gsm)", category: "Stationery", qty: "80 sheets", status: "Low Stock" },
-  { item: "Embossed Gold Pattern Cake Box Blanks", category: "Packaging", qty: "45 boxes", status: "Low Stock" },
-  { item: "Warm White Fairy Micro LEDs (3M)", category: "Electronics", qty: "8 sets", status: "Low Stock" },
-];
+const ITEMS_PER_PAGE = 15;
 
 export default function AdminInventoryPage() {
-  const [stockList, setStockList] = useState(initialStock);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [stockAlerts] = useState(INITIAL_STOCK_ALERTS);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const handleRestock = (itemName: string) => {
-    setStockList((prev) =>
-      prev.map((s) => (s.item === itemName ? { ...s, status: "Adequate" } : s))
-    );
-    toast.success(`Restocked ${itemName}`);
+  useEffect(() => {
+    setProducts(getAdminProducts());
+  }, []);
+
+  const handleAdjustStock = (id: string, delta: number) => {
+    const updated = products.map((p) => {
+      if (p.id === id) {
+        const newStock = Math.max(0, p.stock + delta);
+        return { ...p, stock: newStock };
+      }
+      return p;
+    });
+    setProducts(updated);
+    saveAdminProducts(updated);
+    const prod = updated.find((p) => p.id === id);
+    toast.success(`Updated stock for ${prod?.title}: ${prod?.stock}`);
   };
 
+  const handleRestock = (id: string) => {
+    handleAdjustStock(id, 10);
+  };
+
+  const filtered = products.filter((p) => {
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      !q ||
+      p.title.toLowerCase().includes(q) ||
+      p.brand.toLowerCase().includes(q) ||
+      p.sku.toLowerCase().includes(q)
+    );
+  });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6 bg-[#FBF9F5] min-h-screen">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-bold text-brand-charcoal">
-            Studio Inventory & Supplies
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Track crafting supplies, resin stock, packaging materials, and hardware.
-          </p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top Header matching Image 5 */}
+      <div>
+        <h1 className="font-heading font-serif text-3xl font-bold text-brand-charcoal">
+          Inventory Management
+        </h1>
+        <p className="text-xs text-gray-500 mt-1">
+          Real-time stock levels across all {products.length} products and variants
+        </p>
+      </div>
+
+      {/* Stock Alerts Box matching Image 5 */}
+      <div className="bg-[#FFF5F5] border border-rose-200 rounded-2xl p-5 shadow-2xs space-y-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-600" />
+          <h3 className="font-heading font-serif text-sm font-bold text-rose-700">
+            Stock Alerts
+          </h3>
+        </div>
+
+        <div className="divide-y divide-rose-100">
+          {stockAlerts.map((item) => (
+            <div
+              key={item.id}
+              className="py-2.5 flex items-center justify-between first:pt-0 last:pb-0"
+            >
+              <p className="text-xs font-semibold text-gray-700">
+                {item.name}
+              </p>
+              <span className="text-xs font-bold text-rose-600">
+                Only {item.left} left
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-[#EFECE6] shadow-xs overflow-hidden">
-        <table className="w-full text-xs text-left">
-          <thead className="bg-[#FAF9F6] uppercase text-gray-400 font-semibold text-[10px] tracking-wider border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-4">Item & Material</th>
-              <th className="px-6 py-4">Category</th>
-              <th className="px-6 py-4">Current Quantity</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 font-medium">
-            {stockList.map((s) => (
-              <tr key={s.item} className="hover:bg-amber-50/20 transition-colors">
-                <td className="px-6 py-4 font-bold text-brand-charcoal">{s.item}</td>
-                <td className="px-6 py-4 text-gray-600">{s.category}</td>
-                <td className="px-6 py-4 font-mono font-semibold text-gray-700">{s.qty}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      s.status === "Adequate"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {s.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  {s.status === "Low Stock" ? (
-                    <button
-                      onClick={() => handleRestock(s.item)}
-                      className="px-3 py-1 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold"
-                    >
-                      Restock
-                    </button>
-                  ) : (
-                    <span className="text-gray-400 text-xs">Ready</span>
-                  )}
-                </td>
+      {/* Search Bar */}
+      <div className="flex justify-end">
+        <div className="relative min-w-[240px] md:w-72">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="Search SKU or product..."
+            className="w-full pl-9 pr-4 py-2 rounded-full border border-[#EFECE6] bg-white text-xs focus:outline-hidden focus:border-[#9A7A2E] text-brand-charcoal placeholder-gray-400"
+          />
+        </div>
+      </div>
+
+      {/* Inventory Table matching Image 5 */}
+      <div className="bg-white rounded-2xl border border-[#EFECE6] shadow-2xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-[#EFECE6] bg-[#FAF9F5] text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <th className="py-3.5 px-5">PRODUCT</th>
+                <th className="py-3.5 px-5">SKU</th>
+                <th className="py-3.5 px-5">SIZE / TYPE</th>
+                <th className="py-3.5 px-5 text-center">STOCK</th>
+                <th className="py-3.5 px-5 text-center">ADJUST</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[#EFECE6] text-xs">
+              {paginated.map((product) => (
+                <tr key={product.id} className="hover:bg-[#FAF9F5] transition-colors">
+                  {/* Product title & formulation */}
+                  <td className="py-4 px-5">
+                    <p className="font-bold text-brand-charcoal text-xs">
+                      {product.title}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      {product.brand} • {product.type}
+                    </p>
+                  </td>
+
+                  {/* SKU */}
+                  <td className="py-4 px-5 font-mono text-gray-600 text-xs">
+                    {product.sku}
+                  </td>
+
+                  {/* Size */}
+                  <td className="py-4 px-5 font-medium text-gray-700">
+                    {product.volume}
+                  </td>
+
+                  {/* Stock count in bold green text */}
+                  <td className="py-4 px-5 text-center font-bold tabular-nums text-emerald-600 text-sm">
+                    {product.stock}
+                  </td>
+
+                  {/* Adjust buttons matching Image 5 */}
+                  <td className="py-4 px-5 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      {/* Decrement button [-] */}
+                      <button
+                        onClick={() => handleAdjustStock(product.id, -1)}
+                        className="w-7 h-7 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors"
+                        title="Reduce stock"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Increment button [+] */}
+                      <button
+                        onClick={() => handleAdjustStock(product.id, 1)}
+                        className="w-7 h-7 rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-colors"
+                        title="Increase stock"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Quick Restock [📦] */}
+                      <button
+                        onClick={() => handleRestock(product.id)}
+                        className="w-7 h-7 rounded-lg border border-[#E9DFCE] text-[#8C6D27] hover:bg-[#FAF5E8] flex items-center justify-center transition-colors"
+                        title="Quick restock (+10)"
+                      >
+                        <PackagePlus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-[#FAF9F5]">
+            <span>
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
+              {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} items
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="font-bold text-brand-charcoal px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
