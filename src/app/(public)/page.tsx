@@ -136,78 +136,151 @@ export default function HomePage() {
   return (
     <>
       {/* ── HERO ───────────────────────────────────────────────────────── */}
-      <section className="relative h-screen min-h-[600px] overflow-hidden">
-        {heroSlides.map((slide, i) => (
-          <div
-            key={i}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-1000",
-              i === heroIndex ? "opacity-100" : "opacity-0"
-            )}
-          >
-            <Image
-              src={slide.image}
-              alt={slide.headline}
-              fill
-              className="object-cover object-center"
-              priority={i === 0}
-              sizes="100vw"
-            />
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
-          </div>
-        ))}
-
-        {/* Hero content */}
-        <div className="relative z-10 h-full flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div className="max-w-2xl">
-              <span className="inline-block bg-brand-gold/90 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5 animate-fade-in">
-                ✦ Handcrafted in Sri Lanka
-              </span>
-              <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight hero-text-shadow animate-slide-up">
-                {heroSlides[heroIndex].headline}
-                <br />
-                <span className="text-brand-gold-light">{heroSlides[heroIndex].highlight}</span>
-              </h1>
-              <p className="mt-5 text-lg text-gray-200 leading-relaxed max-w-lg animate-fade-in">
-                {heroSlides[heroIndex].sub}
-              </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Link href={heroSlides[heroIndex].cta.href} className="btn-primary text-base shadow-gold-lg">
-                  {heroSlides[heroIndex].cta.label}
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <a
-                  href="https://wa.me/94740388788?text=Hello%2C%20I%20would%20like%20to%20enquire%20about%20a%20custom%20order."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary border-white text-white hover:bg-white hover:text-brand-charcoal text-base"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  Custom Order
-                </a>
-              </div>
+      <section className="relative w-full overflow-hidden bg-brand-charcoal pt-[72px] sm:pt-0">
+        {/* Mobile Banner: maintains exact 16:9 banner proportion so image is 100% fully visible without cropping */}
+        <div className="relative w-full aspect-[16/9] sm:hidden">
+          {heroSlides.map((slide, i) => (
+            <div
+              key={`mobile-${i}`}
+              className={cn(
+                "absolute inset-0 transition-opacity duration-1000",
+                i === heroIndex ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              )}
+            >
+              <Image
+                src={slide.image}
+                alt={slide.headline}
+                fill
+                priority={i === 0}
+                className="object-contain object-center"
+                sizes="100vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
             </div>
+          ))}
+
+          {/* Mobile Arrows */}
+          <button onClick={prevHero} aria-label="Previous slide"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-brand-gold text-white w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-xs">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button onClick={nextHero} aria-label="Next slide"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-brand-gold text-white w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-xs">
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* Mobile Dots */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+            {heroSlides.map((_, i) => (
+              <button key={i} onClick={() => setHeroIndex(i)} aria-label={`Slide ${i + 1}`}
+                className={cn("h-1.5 rounded-full transition-all", i === heroIndex ? "bg-brand-gold w-5" : "bg-white/60 w-1.5")} />
+            ))}
           </div>
         </div>
 
-        {/* Arrows */}
-        <button onClick={prevHero} aria-label="Previous slide"
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-brand-gold/80 text-white w-11 h-11 rounded-full flex items-center justify-center transition-all">
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <button onClick={nextHero} aria-label="Next slide"
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-brand-gold/80 text-white w-11 h-11 rounded-full flex items-center justify-center transition-all">
-          <ChevronRight className="w-6 h-6" />
-        </button>
+        {/* Mobile Content Card: clean, readable, unclipped below image */}
+        <div className="sm:hidden px-5 py-6 bg-gradient-to-b from-[#1F1F1F] to-brand-charcoal text-center text-white border-b border-brand-charcoal/50">
+          <span className="inline-block bg-brand-gold text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">
+            ✦ Handcrafted in Sri Lanka
+          </span>
+          <h1 className="font-heading text-2xl font-bold text-white leading-snug">
+            {heroSlides[heroIndex].headline}{" "}
+            <span className="text-brand-gold-light">{heroSlides[heroIndex].highlight}</span>
+          </h1>
+          <p className="mt-2 text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
+            {heroSlides[heroIndex].sub}
+          </p>
+          <div className="mt-5 flex items-center justify-center gap-3">
+            <Link href={heroSlides[heroIndex].cta.href} className="btn-primary text-xs !py-2.5 !px-5 shadow-gold">
+              {heroSlides[heroIndex].cta.label}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <a
+              href="https://wa.me/94740388788?text=Hello%2C%20I%20would%20like%20to%20enquire%20about%20a%20custom%20order."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary border-white/80 text-white hover:bg-white hover:text-brand-charcoal text-xs !py-2.5 !px-4"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Custom Order
+            </a>
+          </div>
+        </div>
 
-        {/* Dots */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-          {heroSlides.map((_, i) => (
-            <button key={i} onClick={() => setHeroIndex(i)} aria-label={`Slide ${i + 1}`}
-              className={cn("w-2.5 h-2.5 rounded-full transition-all", i === heroIndex ? "bg-brand-gold w-6" : "bg-white/50")} />
+        {/* Desktop & Tablet: Full-bleed Hero with 100% visible image proportions */}
+        <div className="hidden sm:block relative min-h-[520px] md:min-h-[600px] lg:h-[85vh] xl:h-[90vh]">
+          {heroSlides.map((slide, i) => (
+            <div
+              key={`desktop-${i}`}
+              className={cn(
+                "absolute inset-0 transition-opacity duration-1000",
+                i === heroIndex ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              )}
+            >
+              <Image
+                src={slide.image}
+                alt={slide.headline}
+                fill
+                priority={i === 0}
+                className="object-cover object-center"
+                sizes="100vw"
+              />
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent" />
+            </div>
           ))}
+
+          {/* Desktop Hero content */}
+          <div className="relative z-10 h-full flex items-center">
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full py-16">
+              <div className="max-w-2xl">
+                <span className="inline-block bg-brand-gold/90 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5 animate-fade-in">
+                  ✦ Handcrafted in Sri Lanka
+                </span>
+                <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight hero-text-shadow animate-slide-up">
+                  {heroSlides[heroIndex].headline}
+                  <br />
+                  <span className="text-brand-gold-light">{heroSlides[heroIndex].highlight}</span>
+                </h1>
+                <p className="mt-5 text-base md:text-lg text-gray-200 leading-relaxed max-w-lg animate-fade-in">
+                  {heroSlides[heroIndex].sub}
+                </p>
+                <div className="mt-8 flex flex-wrap gap-4">
+                  <Link href={heroSlides[heroIndex].cta.href} className="btn-primary text-base shadow-gold-lg">
+                    {heroSlides[heroIndex].cta.label}
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                  <a
+                    href="https://wa.me/94740388788?text=Hello%2C%20I%20would%20like%20to%20enquire%20about%20a%20custom%20order."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary border-white text-white hover:bg-white hover:text-brand-charcoal text-base"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    Custom Order
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Arrows */}
+          <button onClick={prevHero} aria-label="Previous slide"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-brand-gold text-white w-11 h-11 rounded-full flex items-center justify-center transition-all backdrop-blur-xs">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button onClick={nextHero} aria-label="Next slide"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-brand-gold text-white w-11 h-11 rounded-full flex items-center justify-center transition-all backdrop-blur-xs">
+            <ChevronRight className="w-6 h-6" />
+          </button>
+
+          {/* Desktop Dots */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {heroSlides.map((_, i) => (
+              <button key={i} onClick={() => setHeroIndex(i)} aria-label={`Slide ${i + 1}`}
+                className={cn("h-2.5 rounded-full transition-all", i === heroIndex ? "bg-brand-gold w-6" : "bg-white/50 w-2.5")} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -223,10 +296,16 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map(({ icon, title, desc, href, img }) => (
-              <Link key={title} href={href} className="group card overflow-hidden">
-                <div className="relative h-52 overflow-hidden">
-                  <Image src={img} alt={title} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width: 640px) 100vw, 25vw" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <Link key={title} href={href} className="group card overflow-hidden flex flex-col">
+                <div className="relative aspect-[4/3] sm:h-52 overflow-hidden bg-brand-champagne/40">
+                  <Image
+                    src={img}
+                    alt={title}
+                    fill
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <span className="absolute top-4 left-4 text-3xl">{icon}</span>
                 </div>
                 <div className="p-5">
@@ -353,30 +432,32 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA BANNER ─────────────────────────────────────────────────── */}
-      <section className="relative py-24 overflow-hidden">
+      <section className="relative py-20 sm:py-24 overflow-hidden bg-brand-charcoal">
         <Image
           src="/485914720_1105087931630453_8075236399170481825_n.jpg"
           alt="Custom order background"
-          fill className="object-cover" sizes="100vw"
+          fill
+          className="object-cover object-center opacity-30"
+          sizes="100vw"
         />
-        <div className="absolute inset-0 bg-brand-charcoal/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-charcoal/95 via-brand-charcoal/85 to-brand-charcoal/95" />
         <div className="relative z-10 text-center px-4 max-w-3xl mx-auto">
-          <h2 className="font-heading text-4xl md:text-5xl font-bold text-white mb-5">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-5">
             Ready to Order Something <span className="text-brand-gold-light">Truly Unique?</span>
           </h2>
-          <p className="text-gray-300 text-lg mb-8">
+          <p className="text-gray-300 text-sm sm:text-lg mb-8 max-w-xl mx-auto leading-relaxed">
             Contact us today to discuss your custom order. We love bringing your ideas to life!
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/contact" className="btn-primary text-base">
-              Request a Quote <ArrowRight className="w-5 h-5" />
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+            <Link href="/contact" className="btn-primary text-sm sm:text-base !py-3 !px-6">
+              Request a Quote <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
             <a
               href="https://wa.me/94740388788?text=Hello%2C%20I%20would%20like%20to%20place%20a%20custom%20order."
               target="_blank" rel="noopener noreferrer"
-              className="btn-secondary border-white text-white hover:bg-white hover:text-brand-charcoal text-base"
+              className="btn-secondary border-white text-white hover:bg-white hover:text-brand-charcoal text-sm sm:text-base !py-3 !px-6"
             >
-              <MessageCircle className="w-5 h-5" /> WhatsApp Us
+              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> WhatsApp Us
             </a>
           </div>
         </div>
