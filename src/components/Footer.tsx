@@ -91,13 +91,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand column */}
           <div className="lg:col-span-2">
-            <Image
-              src="/logo.png"
-              alt="1st Class Creative logo"
-              width={150}
-              height={60}
-              className="h-14 w-auto object-contain mb-5 brightness-200"
-            />
+            <div className="inline-block bg-white/95 px-4 py-2 rounded-md mb-5 shadow-sm border border-brand-gold/30">
+              <Image
+                src="/logo.png"
+                alt="1st Class Creative logo"
+                width={160}
+                height={60}
+                className="h-12 w-auto object-contain"
+              />
+            </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
               Bringing your special moments to life through handcrafted resin creations,
               bespoke wedding invitations, and elegantly designed cake boxes.

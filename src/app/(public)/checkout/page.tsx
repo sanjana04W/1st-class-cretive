@@ -11,6 +11,7 @@ import { CheckCircle2, ShieldCheck, Mail, RotateCcw, AlertCircle, Loader2 } from
 import { formatLKR } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { sendVerificationEmail } from "@/lib/email";
+import { registerNewAdminOrder } from "@/lib/admin-store";
 
 /* ─────────────────────────────────────────
    Constants
@@ -232,6 +233,20 @@ export default function CheckoutPage() {
     };
 
     addOrder(order);
+    try {
+      registerNewAdminOrder({
+        orderNumber,
+        customerName: fullName,
+        customerPhone: phone,
+        customerEmail: email,
+        district,
+        itemsCount: items.reduce((sum, i) => sum + i.quantity, 0),
+        itemsDescription: items.map((i) => `${i.title} (x${i.quantity})`).join(", "),
+        totalAmount,
+      });
+    } catch (adminSyncErr) {
+      console.warn("Could not sync with admin orders:", adminSyncErr);
+    }
     clearCart();
     setIsSubmitting(false);
 

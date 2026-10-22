@@ -14,16 +14,25 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <Footer />
         <CartDrawer />
         <Toaster
-          position="bottom-right"
+          position="top-right"
           toastOptions={{
+            duration: 3500,
             style: {
               background: "#2C2C2C",
               color: "#fff",
-              borderRadius: "12px",
+              borderRadius: "8px",
               fontSize: "13px",
+              padding: "12px 16px",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)",
+              border: "1px solid #3E3E3E",
             },
             success: {
+              duration: 3500,
               iconTheme: { primary: "#C9A84C", secondary: "#fff" },
+            },
+            error: {
+              duration: 4500,
+              iconTheme: { primary: "#D96B64", secondary: "#fff" },
             },
           }}
         />

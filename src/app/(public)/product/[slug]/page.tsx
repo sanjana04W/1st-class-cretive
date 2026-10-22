@@ -404,7 +404,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 <Link
                   key={rel.id}
                   href={`/product/${rel.slug}`}
-                  className="group bg-white rounded-2xl border border-[#EFECE6] shadow-2xs hover:border-[#C9A84C] overflow-hidden transition-all flex flex-col justify-between"
+                  className="group bg-white rounded-lg border border-[#EFECE6] shadow-2xs hover:border-[#C9A84C] hover:shadow-sm overflow-hidden transition-all flex flex-col justify-between"
                 >
                   <div className="relative aspect-square bg-gray-50 overflow-hidden">
                     <Image

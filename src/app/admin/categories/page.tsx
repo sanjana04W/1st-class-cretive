@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -246,14 +246,14 @@ export default function AdminCategoriesPage() {
                       <th className="py-4 px-6 w-1/5">Slug</th>
                       <th className="py-4 px-6 text-center w-20">Items</th>
                       <th className="py-4 px-6 text-center w-16">Order</th>
-                      <th className="py-4 px-6 text-right w-36">Actions</th>
+                      <th className="py-4 px-6 text-right w-44">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F5F2EB]">
                     {parentCategories.map((parent) => {
                       const children = categories.filter(c => c.parentId === parent.id);
                       return (
-                        <div key={parent.id} className="contents">
+                        <Fragment key={parent.id}>
                           <tr className="hover:bg-[#FAF8F5]/80 transition-colors">
                             <td className="py-4 px-6">
                               <div className="flex items-center gap-3">
@@ -273,10 +273,22 @@ export default function AdminCategoriesPage() {
                               </span>
                             </td>
                             <td className="py-4 px-6 text-center text-gray-500 font-bold tabular-nums">{parent.order}</td>
-                            <td className="py-4 px-6 text-right">
-                              <div className="inline-flex items-center gap-2">
-                                <button onClick={() => openEditModal(parent)} className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-[#EFECE6] rounded-lg hover:border-[#DEC47F] hover:text-[#2C2C2C] transition-all">Edit</button>
-                                <button onClick={() => handleDelete(parent.id, parent.name)} className="px-2.5 py-1 text-xs font-medium text-red-500 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 transition-all">Delete</button>
+                            <td className="py-4 px-6 text-right w-44 whitespace-nowrap">
+                              <div className="inline-flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => openEditModal(parent)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2C2C2C] bg-white border border-[#E0DCD3] rounded-md hover:border-[#C9A84C] hover:text-[#9A7A2E] hover:bg-[#FAF6EC] transition-all shadow-xs"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5 text-[#9A7A2E]" />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(parent.id, parent.name)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-md hover:bg-rose-100 hover:border-rose-200 transition-all shadow-xs"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                  <span>Delete</span>
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -296,15 +308,27 @@ export default function AdminCategoriesPage() {
                                 <span className="text-xs font-bold text-gray-500 tabular-nums">{sub.itemCount ?? 0}</span>
                               </td>
                               <td className="py-3 px-6 text-center text-gray-400 text-xs tabular-nums">{sub.order}</td>
-                              <td className="py-3 px-6 text-right">
-                                <div className="inline-flex items-center gap-2">
-                                  <button onClick={() => openEditModal(sub)} className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-white border border-[#EFECE6] rounded-md hover:border-[#DEC47F] transition-all">Edit</button>
-                                  <button onClick={() => handleDelete(sub.id, sub.name)} className="px-2 py-0.5 text-xs font-medium text-red-500 bg-red-50 border border-red-100 rounded-md hover:bg-red-100 transition-all">Delete</button>
+                              <td className="py-3 px-6 text-right w-44 whitespace-nowrap">
+                                <div className="inline-flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => openEditModal(sub)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2C2C2C] bg-white border border-[#E0DCD3] rounded-md hover:border-[#C9A84C] hover:text-[#9A7A2E] hover:bg-[#FAF6EC] transition-all shadow-xs"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5 text-[#9A7A2E]" />
+                                    <span>Edit</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(sub.id, sub.name)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-md hover:bg-rose-100 hover:border-rose-200 transition-all shadow-xs"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                    <span>Delete</span>
+                                  </button>
                                 </div>
                               </td>
                             </tr>
                           ))}
-                        </div>
+                        </Fragment>
                       );
                     })}
                   </tbody>
@@ -339,8 +363,18 @@ export default function AdminCategoriesPage() {
                       View on Website <ExternalLink className="w-3 h-3" />
                     </Link>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => openEditModal(c)} className="p-1.5 text-gray-500 hover:text-[#2C2C2C] hover:bg-[#FAF3E0] rounded-lg transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => handleDelete(c.id, c.name)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button
+                        onClick={() => openEditModal(c)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#2C2C2C] bg-white border border-[#E0DCD3] rounded-md hover:border-[#C9A84C] hover:text-[#9A7A2E] hover:bg-[#FAF6EC] transition-all shadow-xs"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 text-[#9A7A2E]" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id, c.name)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-md hover:bg-rose-100 hover:border-rose-200 transition-all shadow-xs"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -413,7 +447,7 @@ export default function AdminCategoriesPage() {
                 <th className="px-6 py-3 text-left w-2/5">Material</th>
                 <th className="px-6 py-3 text-left w-1/5">Type</th>
                 <th className="px-6 py-3 text-left">Notes</th>
-                <th className="px-6 py-3 text-right w-20">Actions</th>
+                <th className="px-6 py-3 text-right w-44">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F5F2EB]">
@@ -428,11 +462,30 @@ export default function AdminCategoriesPage() {
                     </span>
                   </td>
                   <td className="px-6 py-3.5 text-gray-500">{m.note}</td>
-                  <td className="px-6 py-3.5 text-right">
-                    <button onClick={() => { setMaterials(prev => prev.filter(x => x.id !== m.id)); toast.success("Removed."); }}
-                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                  <td className="px-6 py-3.5 text-right w-44 whitespace-nowrap">
+                    <div className="inline-flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          const n = prompt("Update material name:", m.name); if (!n) return;
+                          const t = prompt("Update type:", m.type) || m.type;
+                          const note = prompt("Update notes:", m.note) || "";
+                          setMaterials(prev => prev.map(x => x.id === m.id ? { ...x, name: n, type: t, note } : x));
+                          toast.success(`"${n}" updated.`);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2C2C2C] bg-white border border-[#E0DCD3] rounded-md hover:border-[#C9A84C] hover:text-[#9A7A2E] hover:bg-[#FAF6EC] transition-all shadow-xs"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 text-[#9A7A2E]" /> Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          setMaterials(prev => prev.filter(x => x.id !== m.id));
+                          toast.success("Material removed.");
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-md hover:bg-rose-100 hover:border-rose-200 transition-all shadow-xs"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -473,7 +526,7 @@ export default function AdminCategoriesPage() {
                   <th className="px-6 py-3 text-left">Districts Covered</th>
                   <th className="px-6 py-3 text-center">Est. Days</th>
                   <th className="px-6 py-3 text-right">Delivery Fee</th>
-                  <th className="px-6 py-3 text-right w-20">Actions</th>
+                  <th className="px-6 py-3 text-right w-44">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F5F2EB]">
@@ -496,19 +549,32 @@ export default function AdminCategoriesPage() {
                     <td className="px-6 py-3.5 text-right">
                       <span className="font-bold text-[#9A7A2E] tabular-nums">LKR {zone.fee.toLocaleString()}</span>
                     </td>
-                    <td className="px-6 py-3.5 text-right">
-                      <button
-                        onClick={() => {
-                          const newFee = prompt(`Update fee for "${zone.zone}" (current: LKR ${zone.fee}):`, String(zone.fee));
-                          if (newFee && !isNaN(Number(newFee))) {
-                            setDelivery(prev => prev.map(z => z.id === zone.id ? { ...z, fee: Number(newFee) } : z));
-                            toast.success("Delivery fee updated.");
-                          }
-                        }}
-                        className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-[#EFECE6] rounded-lg hover:border-[#DEC47F] transition-all"
-                      >
-                        Edit
-                      </button>
+                    <td className="px-6 py-3.5 text-right w-44 whitespace-nowrap">
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => {
+                            const newFee = prompt(`Update fee for "${zone.zone}" (current: LKR ${zone.fee}):`, String(zone.fee));
+                            if (newFee && !isNaN(Number(newFee))) {
+                              setDelivery(prev => prev.map(z => z.id === zone.id ? { ...z, fee: Number(newFee) } : z));
+                              toast.success("Delivery fee updated.");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2C2C2C] bg-white border border-[#E0DCD3] rounded-md hover:border-[#C9A84C] hover:text-[#9A7A2E] hover:bg-[#FAF6EC] transition-all shadow-xs"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-[#9A7A2E]" /> Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Remove delivery zone "${zone.zone}"?`)) {
+                              setDelivery(prev => prev.filter(z => z.id !== zone.id));
+                              toast.success("Zone removed.");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-md hover:bg-rose-100 hover:border-rose-200 transition-all shadow-xs"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

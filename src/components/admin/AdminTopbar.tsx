@@ -14,6 +14,7 @@ import {
   Check,
   X,
   Sparkles,
+  Menu,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -28,9 +29,10 @@ import {
 
 interface AdminTopbarProps {
   title?: string;
+  onOpenMobileMenu?: () => void;
 }
 
-export default function AdminTopbar({ title }: AdminTopbarProps) {
+export default function AdminTopbar({ title, onOpenMobileMenu }: AdminTopbarProps) {
   const { adminUser, logout } = useAuth();
   const router = useRouter();
 
@@ -88,19 +90,28 @@ export default function AdminTopbar({ title }: AdminTopbarProps) {
   const currentRoleConfig = ROLE_PERMISSIONS[selectedRole] || ROLE_PERMISSIONS["Owner"];
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-[#EFECE6] px-6 py-3 flex items-center justify-between shadow-2xs">
-      {/* Left: Page Title */}
-      <div>
-        <h1 className="font-heading text-lg font-bold text-brand-charcoal">
+    <header className="sticky top-0 z-40 bg-white border-b border-[#EFECE6] px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-2xs">
+      {/* Left: Mobile hamburger & Page Title */}
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        {onOpenMobileMenu && (
+          <button
+            onClick={onOpenMobileMenu}
+            className="md:hidden p-1.5 -ml-1 rounded-md text-gray-600 hover:bg-[#FAF7F0] hover:text-[#9A7A2E] transition-colors"
+            aria-label="Open mobile navigation menu"
+          >
+            <Menu className="w-5 h-5 text-brand-charcoal" />
+          </button>
+        )}
+        <h1 className="font-heading text-base sm:text-lg font-bold text-brand-charcoal truncate">
           {title || "Dashboard"}
         </h1>
       </div>
 
       {/* Right: Controls & Profile */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Revenue badge - visible for roles that can view analytics */}
         {currentRoleConfig.canViewAnalytics && (
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold tracking-tight">
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold tracking-tight">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
             <span>LKR 16,550</span>
           </div>
@@ -110,10 +121,11 @@ export default function AdminTopbar({ title }: AdminTopbarProps) {
         <div className="relative">
           <button
             onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF7F0] border border-[#E9DFCE] text-brand-charcoal hover:bg-[#F4EFE6] text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#FAF7F0] border border-[#E9DFCE] text-brand-charcoal hover:bg-[#F4EFE6] text-xs font-semibold transition-colors"
           >
             <Shield className="w-3.5 h-3.5 text-brand-gold-dark" />
-            <span>TEST ROLE: <strong className="text-brand-charcoal">{selectedRole}</strong></span>
+            <span className="hidden sm:inline">ROLE: <strong className="text-brand-charcoal">{selectedRole}</strong></span>
+            <span className="sm:hidden font-bold">{selectedRole}</span>
             <ChevronDown className="w-3 h-3 text-gray-500" />
           </button>
 
@@ -200,8 +212,17 @@ export default function AdminTopbar({ title }: AdminTopbarProps) {
                   notifications.map((n) => (
                     <div
                       key={n.id}
-                      className={`p-3 rounded-xl flex items-start gap-3 transition-colors ${
-                        n.read ? "bg-white hover:bg-gray-50" : "bg-[#F9FAF8] hover:bg-[#F3F6F1]"
+                      onClick={() => {
+                        const updated = notifications.map((x) =>
+                          x.id === n.id ? { ...x, read: true } : x
+                        );
+                        setNotifications(updated);
+                        saveAdminNotifications(updated);
+                        setShowNotifPopover(false);
+                        router.push(`/admin/orders?search=${encodeURIComponent(n.orderRef)}`);
+                      }}
+                      className={`p-3 rounded-xl flex items-start gap-3 transition-colors cursor-pointer ${
+                        n.read ? "bg-white hover:bg-gray-50" : "bg-[#F9FAF8] hover:bg-[#F3F6F1] border-l-2 border-brand-gold"
                       }`}
                     >
                       <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
@@ -213,7 +234,10 @@ export default function AdminTopbar({ title }: AdminTopbarProps) {
                             New Order: {n.orderRef}
                           </p>
                           <button
-                            onClick={() => handleDismissNotif(n.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDismissNotif(n.id);
+                            }}
                             className="text-gray-400 hover:text-gray-600 p-0.5"
                           >
                             <X className="w-3 h-3" />

@@ -82,6 +82,33 @@ export default function AdminMessagesPage() {
   const [replyText, setReplyText] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Load inquiries from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("admin_customer_inquiries");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setInquiries(parsed);
+          setSelectedId(parsed[0].id);
+          return;
+        }
+      }
+      localStorage.setItem("admin_customer_inquiries", JSON.stringify(INITIAL_INQUIRIES));
+    } catch (e) {
+      console.warn("Could not load inquiries:", e);
+    }
+  }, []);
+
+  const saveInquiries = (updated: CustomerInquiry[]) => {
+    setInquiries(updated);
+    try {
+      localStorage.setItem("admin_customer_inquiries", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Could not save to localStorage:", e);
+    }
+  };
+
   // Sync internal note text with selected inquiry
   useEffect(() => {
     const cur = inquiries.find((i) => i.id === selectedId);
@@ -99,18 +126,16 @@ export default function AdminMessagesPage() {
 
   // Status changer
   const handleUpdateStatus = (id: string, newStatus: CustomerInquiry["status"]) => {
-    setInquiries((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i))
-    );
+    const updated = inquiries.map((i) => (i.id === id ? { ...i, status: newStatus } : i));
+    saveInquiries(updated);
     toast.success(`Inquiry marked as ${newStatus}`);
   };
 
   // Save notes
   const handleSaveNotes = () => {
     if (!selectedInquiry) return;
-    setInquiries((prev) =>
-      prev.map((i) => (i.id === selectedInquiry.id ? { ...i, notes: internalNote } : i))
-    );
+    const updated = inquiries.map((i) => (i.id === selectedInquiry.id ? { ...i, notes: internalNote } : i));
+    saveInquiries(updated);
     toast.success("Internal note saved successfully");
   };
 
@@ -139,10 +164,21 @@ export default function AdminMessagesPage() {
   // Refresh handler
   const handleRefresh = () => {
     setIsRefreshing(true);
+    try {
+      const stored = localStorage.getItem("admin_customer_inquiries");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setInquiries(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn(e);
+    }
     setTimeout(() => {
       setIsRefreshing(false);
       toast.success("Messages & inquiries refreshed");
-    }, 600);
+    }, 500);
   };
 
   // Filter inquiries

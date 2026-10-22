@@ -38,7 +38,42 @@ export default function ContactPage() {
   const onSubmit = async (data: ContactFormData) => {
     setSubmitting(true);
     try {
-      await submitInquiry(data);
+      // Attempt firestore submission with a short timeout so user is never blocked
+      const firestorePromise = submitInquiry(data);
+      const timeoutPromise = new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 2500)
+      );
+
+      try {
+        await Promise.race([firestorePromise, timeoutPromise]);
+      } catch (e) {
+        console.warn("Firestore sync skipped or offline, storing in local customer inquiries:", e);
+      }
+
+      // Persist to admin messages / inquiries store in localStorage
+      const typeLabel = inquiryTypes.find((t) => t.value === data.inquiryType)?.label || data.inquiryType;
+      const newInquiry = {
+        id: "inq-" + Date.now(),
+        senderName: data.name,
+        senderEmail: data.email || "Not provided",
+        senderPhone: data.phone || "Not provided",
+        subject: `${typeLabel} Enquiry - Website Form`,
+        message: data.message,
+        timestamp: "Just now",
+        status: "New" as const,
+        notes: `Submitted from website contact form for ${typeLabel}.`,
+      };
+
+      try {
+        if (typeof window !== "undefined") {
+          const stored = localStorage.getItem("admin_customer_inquiries");
+          const list = stored ? JSON.parse(stored) : [];
+          localStorage.setItem("admin_customer_inquiries", JSON.stringify([newInquiry, ...list]));
+        }
+      } catch (storageErr) {
+        console.warn("Could not save to localStorage:", storageErr);
+      }
+
       setSubmitted(true);
       reset();
       toast.success("Your enquiry was sent! We'll be in touch soon. ✨");
@@ -126,9 +161,9 @@ export default function ContactPage() {
               </div>
 
               {/* Quick WhatsApp */}
-              <div className="bg-brand-gold/10 border border-brand-gold/30 rounded-2xl p-5">
-                <p className="font-heading font-bold text-brand-charcoal mb-2">💬 Prefer to chat?</p>
-                <p className="text-gray-500 text-sm mb-4">Message us on WhatsApp for a quick response — we reply within hours.</p>
+              <div className="bg-brand-gold/10 border border-brand-gold/30 rounded-lg p-5">
+                <p className="font-heading font-bold text-brand-charcoal mb-2">Prefer to chat directly?</p>
+                <p className="text-gray-500 text-sm mb-4">Message us on WhatsApp for a quick response — we reply promptly.</p>
                 <a
                   href="https://wa.me/94740388788?text=Hello%2C%20I%20would%20like%20to%20enquire%20about%20a%20custom%20order."
                   target="_blank" rel="noopener noreferrer"
@@ -141,12 +176,14 @@ export default function ContactPage() {
 
             {/* Form */}
             <div className="lg:col-span-3">
-              <div className="bg-white rounded-3xl shadow-card p-8 md:p-10">
+              <div className="bg-white rounded-lg border border-[#E8E4DC] shadow-sm p-8 md:p-10">
                 {submitted ? (
                   <div className="text-center py-12">
-                    <div className="text-5xl mb-5">✨</div>
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand-champagne/60 border border-brand-gold/40 flex items-center justify-center text-brand-gold">
+                      <Send className="w-8 h-8" />
+                    </div>
                     <h3 className="font-heading text-2xl font-bold text-brand-charcoal mb-3">Enquiry Received!</h3>
-                    <p className="text-gray-500 mb-6">Thank you for reaching out. We'll get back to you as soon as possible.</p>
+                    <p className="text-gray-500 mb-6 max-w-md mx-auto">Thank you for reaching out. We have received your request and our team will get in touch shortly.</p>
                     <button onClick={() => setSubmitted(false)} className="btn-secondary">Send Another Enquiry</button>
                   </div>
                 ) : (

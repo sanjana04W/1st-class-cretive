@@ -20,6 +20,7 @@ import {
   AdminOrder,
   getAdminOrders,
   saveAdminOrders,
+  markOrderNotificationRead,
   INITIAL_ADMIN_ORDERS,
 } from "@/lib/admin-store";
 import toast from "react-hot-toast";
@@ -38,7 +39,9 @@ export default function AdminOrdersPage() {
 
     // Also check for any orders placed through the public checkout
     try {
-      const publicOrdersRaw = localStorage.getItem("1stclass_customer_orders");
+      const publicOrdersRaw =
+        localStorage.getItem("fcc_all_orders") ||
+        localStorage.getItem("1stclass_customer_orders");
       if (publicOrdersRaw) {
         const publicOrders = JSON.parse(publicOrdersRaw);
         if (Array.isArray(publicOrders) && publicOrders.length > 0) {
@@ -71,14 +74,33 @@ export default function AdminOrdersPage() {
     }
 
     setOrders(stored);
+
+    // Read URL search query param if opened from topbar notification
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const searchParam = params.get("search");
+      if (searchParam) {
+        setSearchQuery(searchParam);
+        const match = stored.find(
+          (o) => o.orderRef.toLowerCase() === searchParam.toLowerCase()
+        );
+        if (match) {
+          setInspectOrder(match);
+        }
+      }
+    }
   }, []);
 
   const handleUpdateStatus = (orderId: string, newStatus: AdminOrder["status"]) => {
+    const target = orders.find((o) => o.id === orderId);
     const updated = orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o));
     setOrders(updated);
     saveAdminOrders(updated);
     if (inspectOrder && inspectOrder.id === orderId) {
       setInspectOrder({ ...inspectOrder, status: newStatus });
+    }
+    if (target) {
+      markOrderNotificationRead(target.orderRef);
     }
     toast.success(`Order status updated to ${newStatus}`);
   };
@@ -116,7 +138,7 @@ export default function AdminOrdersPage() {
       cleanPhone = "94" + cleanPhone;
     }
     const message = encodeURIComponent(
-      `Hello ${order.customerName},\nThis is Lillyum Fragrance regarding your order *${order.orderRef}* totaling LKR ${order.totalAmount.toLocaleString()} (Cash on Delivery).\nStatus: ${order.status}.\nThank you for shopping with us!`
+      `Hello ${order.customerName},\nThis is 1st Class Creative regarding your order *${order.orderRef}* totaling LKR ${order.totalAmount.toLocaleString()} (Cash on Delivery).\nStatus: ${order.status}.\nThank you for choosing 1st Class Creative!`
     );
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, "_blank");
   };

@@ -53,28 +53,28 @@ const heroSlides = [
 // ── Services ─────────────────────────────────────────────────────────────────
 const services = [
   {
-    icon: "✨",
+    tag: "Resin Art",
     title: "Resin Creations",
     desc: "Keychains, coasters, art panels, photo frames and custom resin pieces in any colour or style.",
     href: "/portfolio?cat=resin-creations",
     img: "/485184284_1103127648493148_4472142601649408182_n.jpg",
   },
   {
-    icon: "💌",
+    tag: "Stationery",
     title: "Wedding Invitations",
     desc: "Elegant personalised invitations for weddings, engagements and special celebrations.",
     href: "/portfolio?cat=wedding-invitations",
     img: "/468396156_2478270609044241_1138043242894587302_n.jpg",
   },
   {
-    icon: "🎂",
+    tag: "Packaging",
     title: "Cake Boxes",
     desc: "Beautifully designed and handcrafted cake boxes for weddings, birthdays and all occasions.",
     href: "/portfolio?cat=cake-boxes",
     img: "/484074106_1098277412311505_6713907112004454121_n.jpg",
   },
   {
-    icon: "🎁",
+    tag: "Keepsakes",
     title: "Custom Frames & Gifts",
     desc: "Personalised photo frames, shadow boxes and unique gift creations for every milestone.",
     href: "/portfolio?cat=custom-frames",
@@ -82,12 +82,19 @@ const services = [
   },
 ];
 
+// ── Why Choose Us Slideshow Backgrounds ───────────────────────────────────────
+const whyUsSlides = [
+  { image: "/hero/hero-1.jpg", caption: "Hand-poured resin with pure gold leaf" },
+  { image: "/hero/hero-2.jpg", caption: "Bespoke wedding stationery & luxury packaging" },
+  { image: "/hero/hero-4.jpg", caption: "Artisanal illuminated memory shadow boxes" },
+];
+
 // ── Why Us ────────────────────────────────────────────────────────────────────
 const whyUs = [
-  { icon: <Sparkles className="w-6 h-6 text-brand-gold" />, title: "100% Handmade", desc: "Every piece crafted by hand with premium materials and attention to detail." },
-  { icon: <Heart className="w-6 h-6 text-brand-rose" />, title: "Made with Love", desc: "Each creation is made with genuine care to make your moment extra special." },
-  { icon: <Package className="w-6 h-6 text-brand-teal" />, title: "Custom Orders", desc: "Tell us your vision — we'll bring it to life exactly as you imagine." },
-  { icon: <Clock className="w-6 h-6 text-brand-gold" />, title: "Timely Delivery", desc: "We respect your timeline and ensure your order arrives when you need it." },
+  { icon: <Sparkles className="w-5 h-5 text-brand-gold" />, title: "100% Handmade", desc: "Every piece crafted by hand with premium materials and painstaking attention to detail." },
+  { icon: <Heart className="w-5 h-5 text-brand-gold-light" />, title: "Made with Love", desc: "Each creation is infused with genuine care to make your celebration memorable." },
+  { icon: <Package className="w-5 h-5 text-brand-gold" />, title: "Custom Orders", desc: "Tell us your exact vision — we bring your colour palettes and ideas to reality." },
+  { icon: <Clock className="w-5 h-5 text-brand-gold-light" />, title: "Timely Delivery", desc: "Reliable scheduling and island-wide delivery to ensure your order arrives on time." },
 ];
 
 // ── Testimonials ──────────────────────────────────────────────────────────────
@@ -112,6 +119,7 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
+  const [whyUsSlideIndex, setWhyUsSlideIndex] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
 
   // Auto-advance hero
@@ -119,6 +127,14 @@ export default function HomePage() {
     const timer = setInterval(() => {
       setHeroIndex((prev) => (prev + 1) % heroSlides.length);
     }, 5500);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-advance Why Us luxury slideshow
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setWhyUsSlideIndex((prev) => (prev + 1) % whyUsSlides.length);
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
@@ -288,15 +304,16 @@ export default function HomePage() {
       <section className="py-20 bg-brand-cream">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
+            <p className="text-xs font-semibold text-brand-gold uppercase tracking-widest mb-2">Our Specialties</p>
             <h2 className="section-heading section-heading-center">What We Create</h2>
             <div className="gold-divider" />
-            <p className="text-gray-500 mt-2 max-w-xl mx-auto">
-              From sparkling resin keychains to bespoke wedding stationery — each piece is made with heart.
+            <p className="text-gray-500 mt-2 max-w-xl mx-auto text-sm sm:text-base">
+              From sparkling resin keychains to bespoke wedding stationery — each piece is handcrafted to perfection.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map(({ icon, title, desc, href, img }) => (
-              <Link key={title} href={href} className="group card overflow-hidden flex flex-col">
+            {services.map(({ tag, title, desc, href, img }) => (
+              <Link key={title} href={href} className="group bg-white rounded-md border border-[#E8E4DC] overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col">
                 <div className="relative aspect-[4/3] sm:h-52 overflow-hidden bg-brand-champagne/40">
                   <Image
                     src={img}
@@ -306,12 +323,16 @@ export default function HomePage() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <span className="absolute top-4 left-4 text-3xl">{icon}</span>
+                  <span className="absolute top-3 left-3 text-xs uppercase tracking-wider font-semibold text-brand-gold bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-sm border border-brand-gold/30">
+                    {tag}
+                  </span>
                 </div>
-                <div className="p-5">
-                  <h3 className="font-heading text-lg font-bold text-brand-charcoal mb-2">{title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-brand-gold text-sm font-semibold group-hover:gap-2 transition-all">
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-heading text-lg font-bold text-brand-charcoal mb-2">{title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+                  </div>
+                  <span className="mt-4 inline-flex items-center gap-1 text-brand-gold text-sm font-semibold group-hover:gap-2 transition-all">
                     View Collection <ArrowRight className="w-4 h-4" />
                   </span>
                 </div>
@@ -326,20 +347,21 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-12">
             <div>
+              <p className="text-xs font-semibold text-brand-gold uppercase tracking-widest mb-1.5">Artisanal Highlights</p>
               <h2 className="section-heading">Featured Collection</h2>
               <div className="w-16 h-1 bg-brand-gold rounded mt-3" />
             </div>
-            <Link href="/portfolio" className="btn-secondary text-sm !py-2.5 !px-5">
+            <Link href="/portfolio" className="btn-secondary text-sm !rounded-md !py-2.5 !px-5">
               View All <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {featured.map((item) => (
               <Link key={item.id} href={`/portfolio?cat=${item.category}`}
-                className="group relative aspect-square overflow-hidden rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
-                <Image src={item.src} alt={item.alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="(max-width: 640px) 50vw, 25vw" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                  <p className="text-white font-heading font-semibold text-sm">{item.title}</p>
+                className="group relative aspect-square overflow-hidden rounded-md border border-[#E8E4DC] shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                <Image src={item.src} alt={item.alt} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 50vw, 25vw" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                  <p className="text-white font-heading font-semibold text-sm leading-snug">{item.title}</p>
                 </div>
               </Link>
             ))}
@@ -347,24 +369,77 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── WHY CHOOSE US ──────────────────────────────────────────────── */}
-      <section className="py-20 bg-brand-champagne">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <h2 className="section-heading section-heading-center">Why Choose 1st Class Creative?</h2>
+      {/* ── WHY CHOOSE US (ENHANCED LUXURY SLIDESHOW) ───────────────────── */}
+      <section className="relative py-24 sm:py-28 overflow-hidden bg-brand-charcoal text-white">
+        {/* Dynamic Background Slideshow */}
+        <div className="absolute inset-0">
+          {whyUsSlides.map((slide, idx) => (
+            <div
+              key={slide.image}
+              className={cn(
+                "absolute inset-0 transition-opacity duration-1000",
+                idx === whyUsSlideIndex ? "opacity-35 scale-105" : "opacity-0 scale-100",
+                "transition-transform duration-[6000ms] ease-out"
+              )}
+            >
+              <Image
+                src={slide.image}
+                alt="1st Class Creative Craftsmanship"
+                fill
+                className="object-cover object-center"
+                sizes="100vw"
+              />
+            </div>
+          ))}
+          {/* Luxury gradients & vignette */}
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-charcoal via-brand-charcoal/85 to-brand-charcoal" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(201,168,76,0.12)_0%,transparent_70%)]" />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-block text-xs font-semibold tracking-widest text-brand-gold uppercase px-3 py-1 rounded-sm border border-brand-gold/40 bg-brand-gold/10 mb-3">
+              ✦ The 1st Class Standard
+            </span>
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight">
+              Why Choose 1st Class Creative?
+            </h2>
             <div className="gold-divider" />
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed mt-2">
+              Where exceptional craftsmanship meets personal passion — creating heirloom keepsakes and bespoke designs made uniquely for your moments.
+            </p>
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {whyUs.map(({ icon, title, desc }) => (
-              <div key={title} className="bg-white rounded-2xl p-7 text-center shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
-                <div className="flex justify-center mb-4">
-                  <div className="w-14 h-14 rounded-full bg-brand-champagne flex items-center justify-center">
-                    {icon}
-                  </div>
+              <div
+                key={title}
+                className="group relative bg-white/[0.07] hover:bg-white/[0.12] backdrop-blur-md rounded-md p-7 border border-white/15 hover:border-brand-gold/60 transition-all duration-300 hover:-translate-y-1.5 shadow-lg"
+              >
+                <div className="w-12 h-12 rounded-md bg-brand-gold/20 border border-brand-gold/40 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-brand-gold/30 transition-all duration-300">
+                  {icon}
                 </div>
-                <h3 className="font-heading text-lg font-bold text-brand-charcoal mb-2">{title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+                <h3 className="font-heading text-lg font-bold text-white mb-2.5 group-hover:text-brand-gold-light transition-colors">
+                  {title}
+                </h3>
+                <p className="text-gray-300 text-sm leading-relaxed">{desc}</p>
+                <div className="w-0 group-hover:w-8 h-0.5 bg-brand-gold mt-4 transition-all duration-300" />
               </div>
+            ))}
+          </div>
+
+          {/* Slideshow indicator dots */}
+          <div className="flex justify-center items-center gap-2 mt-12">
+            {whyUsSlides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setWhyUsSlideIndex(i)}
+                aria-label={`Why Us slide ${i + 1}`}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  i === whyUsSlideIndex ? "w-8 bg-brand-gold" : "w-2 bg-white/30 hover:bg-white/50"
+                )}
+              />
             ))}
           </div>
         </div>
@@ -378,26 +453,26 @@ export default function HomePage() {
             <div className="gold-divider" />
             <p className="text-gray-500 mt-2">A glimpse of our most recent creations.</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {recent.map((item, idx) => (
               <Link
                 key={item.id}
                 href="/portfolio"
                 className={cn(
-                  "group relative overflow-hidden rounded-xl",
+                  "group relative overflow-hidden rounded-md border border-[#E8E4DC] shadow-xs",
                   idx === 0 || idx === 5 ? "row-span-2 col-span-2" : "",
                   "aspect-square"
                 )}
               >
-                <Image src={item.src} alt={item.alt} fill className="object-cover transition-transform duration-500 group-hover:scale-110" sizes="20vw" />
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Image src={item.src} alt={item.alt} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="20vw" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center">
                   <span className="text-white text-xs font-semibold">{item.title}</span>
                 </div>
               </Link>
             ))}
           </div>
           <div className="text-center mt-10">
-            <Link href="/portfolio" className="btn-primary">
+            <Link href="/portfolio" className="btn-primary !rounded-md">
               See Full Collection <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -413,7 +488,7 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {testimonials.map(({ name, text, rating, product }) => (
-              <div key={name} className="bg-brand-cream rounded-2xl p-7 border border-brand-champagne shadow-card hover:shadow-card-hover transition-all duration-300">
+              <div key={name} className="bg-brand-cream rounded-md p-7 border border-brand-champagne shadow-xs hover:shadow-sm transition-all duration-300">
                 <StarRating rating={rating} />
                 <p className="mt-4 text-gray-600 text-sm leading-relaxed italic">"{text}"</p>
                 <div className="mt-5 flex items-center gap-3">
@@ -449,13 +524,13 @@ export default function HomePage() {
             Contact us today to discuss your custom order. We love bringing your ideas to life!
           </p>
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            <Link href="/contact" className="btn-primary text-sm sm:text-base !py-3 !px-6">
+            <Link href="/contact" className="btn-primary text-sm sm:text-base !rounded-md !py-3 !px-6">
               Request a Quote <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
             <a
               href="https://wa.me/94740388788?text=Hello%2C%20I%20would%20like%20to%20place%20a%20custom%20order."
               target="_blank" rel="noopener noreferrer"
-              className="btn-secondary border-white text-white hover:bg-white hover:text-brand-charcoal text-sm sm:text-base !py-3 !px-6"
+              className="btn-secondary border-white text-white hover:bg-white hover:text-brand-charcoal text-sm sm:text-base !rounded-md !py-3 !px-6"
             >
               <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> WhatsApp Us
             </a>

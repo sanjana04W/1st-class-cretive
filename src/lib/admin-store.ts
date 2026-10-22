@@ -211,32 +211,22 @@ export const INITIAL_STOCK_ALERTS = [
 export const INITIAL_NOTIFICATIONS: AdminNotification[] = [
   {
     id: "notif-1",
-    orderRef: "LIL-2025-001",
-    date: "16 Sept, 09:42",
-    customerName: "Anushka Senanayake",
-    amount: 6150,
-    itemsCount: 1,
+    orderRef: "LF-20261016-8622",
+    date: "16 Oct, 13:02",
+    customerName: "wenuri",
+    amount: 16700,
+    itemsCount: 2,
     district: "Colombo",
     read: false,
   },
   {
     id: "notif-2",
-    orderRef: "LIL-2025-002",
-    date: "16 Sept, 03:42",
-    customerName: "Rohan De Silva",
-    amount: 7600,
+    orderRef: "LIL-2025-001",
+    date: "16 Oct, 10:58",
+    customerName: "Anushka Senanayake",
+    amount: 6150,
     itemsCount: 1,
-    district: "Gampaha",
-    read: false,
-  },
-  {
-    id: "notif-3",
-    orderRef: "LIL-2025-003",
-    date: "15 Sept, 11:42",
-    customerName: "Dilini Jayawardena",
-    amount: 8950,
-    itemsCount: 1,
-    district: "Kandy",
+    district: "Colombo",
     read: false,
   },
 ];
@@ -256,7 +246,8 @@ export function getAdminOrders(): AdminOrder[] {
       localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ADMIN_ORDERS));
       return INITIAL_ADMIN_ORDERS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_ADMIN_ORDERS;
   } catch {
     return INITIAL_ADMIN_ORDERS;
   }
@@ -265,6 +256,71 @@ export function getAdminOrders(): AdminOrder[] {
 export function saveAdminOrders(orders: AdminOrder[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+  try {
+    window.dispatchEvent(new CustomEvent("admin_orders_updated", { detail: orders }));
+  } catch {}
+}
+
+export function markOrderNotificationRead(orderRef: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const notifs = getAdminNotifications();
+    const updated = notifs.map(n => n.orderRef === orderRef ? { ...n, read: true } : n);
+    saveAdminNotifications(updated);
+    window.dispatchEvent(new CustomEvent("admin_notifications_updated", { detail: updated }));
+  } catch {}
+}
+
+export function registerNewAdminOrder(order: {
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  district: string;
+  itemsCount: number;
+  itemsDescription?: string;
+  totalAmount: number;
+}) {
+  if (typeof window === "undefined") return;
+  try {
+    const newOrder: AdminOrder = {
+      id: `ord-${Date.now()}`,
+      orderRef: order.orderNumber,
+      date: "Just now",
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerEmail: order.customerEmail,
+      district: order.district,
+      itemsCount: order.itemsCount,
+      itemsDescription: order.itemsDescription,
+      totalAmount: order.totalAmount,
+      status: "PENDING",
+      isVerified: true,
+    };
+
+    const orders = getAdminOrders();
+    const updatedOrders = [newOrder, ...orders.filter((o) => o.orderRef !== newOrder.orderRef)];
+    saveAdminOrders(updatedOrders);
+
+    const newNotif: AdminNotification = {
+      id: `notif-${Date.now()}`,
+      orderRef: order.orderNumber,
+      date: "Just now",
+      customerName: order.customerName,
+      amount: order.totalAmount,
+      itemsCount: order.itemsCount,
+      district: order.district,
+      read: false,
+    };
+    const notifs = getAdminNotifications();
+    const updatedNotifs = [newNotif, ...notifs.filter((n) => n.orderRef !== newNotif.orderRef)];
+    saveAdminNotifications(updatedNotifs);
+
+    window.dispatchEvent(new CustomEvent("admin_orders_updated", { detail: updatedOrders }));
+    window.dispatchEvent(new CustomEvent("admin_notifications_updated", { detail: updatedNotifs }));
+  } catch (err) {
+    console.warn("Could not register new admin order:", err);
+  }
 }
 
 export function getAdminProducts(): AdminProduct[] {

@@ -4,7 +4,7 @@ import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { X, ShoppingBag, Eye, Check, Sparkles } from "lucide-react";
+import { X, ShoppingBag, Eye, Check, Sparkles, Search } from "lucide-react";
 import { collectionItems, categoryLabels, type CollectionCategory, type CollectionItem } from "@/lib/portfolio-data";
 import { useLiveProducts } from "@/lib/live-products";
 import { cn, formatLKR } from "@/lib/utils";
@@ -24,39 +24,91 @@ function PortfolioContent() {
   const searchParams = useSearchParams();
   const initialCat = searchParams.get("cat") ?? "all";
   const [activeCat, setActiveCat] = useState(initialCat);
+  const [searchQuery, setSearchQuery] = useState("");
   const [lightbox, setLightbox] = useState<null | CollectionItem>(null);
   const { addToCart } = useCart();
   const { products: liveItems } = useLiveProducts();
 
-  const filtered = useMemo(
-    () =>
-      activeCat === "all"
-        ? liveItems
-        : liveItems.filter((i) => i.category === activeCat),
-    [activeCat, liveItems]
-  );
+  const filtered = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return liveItems.filter((i) => {
+      const matchesCat = activeCat === "all" || i.category === activeCat;
+      if (!matchesCat) return false;
+      if (!q) return true;
+      const titleMatch = i.title.toLowerCase().includes(q);
+      const catLabel = (categoryLabels[i.category as CollectionCategory] || "").toLowerCase();
+      const catMatch = catLabel.includes(q);
+      const descMatch = (i.description || "").toLowerCase().includes(q);
+      const tagsMatch = i.tags?.some((t) => t.toLowerCase().includes(q)) ?? false;
+      return titleMatch || catMatch || descMatch || tagsMatch;
+    });
+  }, [activeCat, searchQuery, liveItems]);
 
   return (
     <>
-      {/* Filter bar */}
-      <div className="flex flex-wrap justify-center gap-2.5 mb-12">
-        {ALL_CATS.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => setActiveCat(value)}
-            className={cn(
-              "px-5 py-2.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer",
-              activeCat === value
-                ? "bg-[#C9A84C] text-white border-[#C9A84C] shadow-xs"
-                : "bg-white text-brand-charcoal border-gray-200 hover:border-[#C9A84C] hover:text-[#9A7A2E]"
+      {/* Search and Filters Bar */}
+      <div className="max-w-4xl mx-auto mb-10 space-y-6">
+        {/* Search Input */}
+        <div className="relative max-w-xl mx-auto">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by product name, category, or keyword..."
+            className="w-full pl-11 pr-10 py-3 rounded-md bg-white border border-[#E5E1D8] text-sm text-[#2C2C2C] placeholder:text-gray-400 focus:outline-none focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C] shadow-2xs transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-brand-charcoal"
+              aria-label="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Category Pills */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {ALL_CATS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setActiveCat(value)}
+              className={cn(
+                "px-4 py-2 rounded-md text-xs font-semibold border transition-all duration-200 cursor-pointer",
+                activeCat === value
+                  ? "bg-[#C9A84C] text-white border-[#C9A84C] shadow-xs"
+                  : "bg-white text-brand-charcoal border-gray-200 hover:border-[#C9A84C] hover:text-[#9A7A2E]"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Results Count & Active Search indicator */}
+        {(searchQuery || activeCat !== "all") && (
+          <div className="flex items-center justify-between text-xs text-gray-500 pt-1 px-1">
+            <span>
+              Showing <strong className="text-brand-charcoal">{filtered.length}</strong> creations
+              {searchQuery && (
+                <> for &ldquo;<span className="text-[#9A7A2E]">{searchQuery}</span>&rdquo;</>
+              )}
+            </span>
+            {(searchQuery || activeCat !== "all") && (
+              <button
+                onClick={() => { setActiveCat("all"); setSearchQuery(""); }}
+                className="text-[#9A7A2E] hover:underline font-semibold"
+              >
+                Clear all filters
+              </button>
             )}
-          >
-            {label}
-          </button>
-        ))}
+          </div>
+        )}
       </div>
 
-      {/* Grid matching Product Card Reference Screenshot 1 */}
+      {/* Grid: Clean rectangular product cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {filtered.map((item, idx) => {
           const discountPercent = item.originalPrice
@@ -66,9 +118,9 @@ function PortfolioContent() {
           return (
             <div
               key={item.id}
-              className="group bg-white rounded-3xl border border-[#EFECE6] shadow-2xs hover:shadow-md hover:border-[#C9A84C]/50 transition-all duration-300 overflow-hidden flex flex-col justify-between"
+              className="group bg-white rounded-md border border-[#E8E4DC] shadow-2xs hover:shadow-md hover:border-[#C9A84C] transition-all duration-300 overflow-hidden flex flex-col justify-between"
             >
-              {/* Image & Badges — clicking image navigates to product detail page */}
+              {/* Image & Badges */}
               <Link href={`/product/${item.slug}`} className="block relative aspect-square overflow-hidden bg-gray-50">
                 <Image
                   src={item.src}
@@ -78,31 +130,31 @@ function PortfolioContent() {
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 />
 
-                {/* Top Badge (New / Discount) matching Screenshot 1 */}
-                <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+                {/* Top Badge (New / Discount) */}
+                <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
                   {idx % 3 === 0 && (
-                    <span className="bg-[#59A88E] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+                    <span className="bg-[#59A88E] text-white text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider shadow-xs">
                       NEW
                     </span>
                   )}
                   {discountPercent && discountPercent > 0 && (
-                    <span className="bg-[#D96B64] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                    <span className="bg-[#D96B64] text-white text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-xs">
                       -{discountPercent}%
                     </span>
                   )}
                 </div>
 
-                {/* Quick view eye button — stops propagation so it opens lightbox, not product page */}
+                {/* Quick view eye button */}
                 <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLightbox(item); }}
-                  className="absolute top-3 right-3 p-2 rounded-full bg-white/90 text-brand-charcoal hover:bg-white hover:text-[#9A7A2E] shadow-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
+                  className="absolute top-2.5 right-2.5 p-2 rounded-md bg-white/95 text-brand-charcoal hover:bg-white hover:text-[#9A7A2E] shadow-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
                   title="Quick View"
                 >
                   <Eye className="w-3.5 h-3.5" />
                 </button>
 
-                {/* Hover Add to Cart Button overlaying image bottom */}
-                <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-10">
+                {/* Hover Add to Cart Button */}
+                <div className="absolute inset-x-2.5 bottom-2.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-10">
                   <button
                     onClick={(e) => {
                       e.preventDefault();
@@ -118,7 +170,7 @@ function PortfolioContent() {
                         variant: "Standard Custom",
                       });
                     }}
-                    className="w-full py-2.5 px-3 rounded-xl bg-[#C9A84C] hover:bg-[#B3933B] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-colors"
+                    className="w-full py-2 px-3 rounded-md bg-[#C9A84C] hover:bg-[#B3933B] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-colors"
                   >
                     <ShoppingBag className="w-3.5 h-3.5" />
                     <span>Add to Cart</span>
@@ -126,8 +178,8 @@ function PortfolioContent() {
                 </div>
               </Link>
 
-              {/* Card Meta details matching Screenshot 1 */}
-              <div className="p-4 space-y-1">
+              {/* Card Meta details */}
+              <div className="p-3.5 space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#9A7A2E]">
                   {categoryLabels[item.category as CollectionCategory]}
                 </span>
@@ -146,8 +198,8 @@ function PortfolioContent() {
                   Handcrafted • Custom Orders
                 </p>
 
-                {/* Price Display matching Screenshot 1 */}
-                <div className="pt-2 flex items-baseline gap-2">
+                {/* Price Display */}
+                <div className="pt-1.5 flex items-baseline gap-2">
                   <span className="font-heading font-bold text-sm text-brand-charcoal">
                     {formatLKR(item.price)}
                   </span>

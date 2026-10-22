@@ -58,7 +58,12 @@ const config: Config = {
           "50%": { transform: "translateY(-8px)" },
         },
       },
+      backdropBlur: {
+        xs: "2px",
+      },
       boxShadow: {
+        "2xs": "0 1px 2px rgba(0,0,0,0.06)",
+        "xs": "0 1px 4px rgba(0,0,0,0.08)",
         "gold": "0 4px 24px rgba(201,168,76,0.25)",
         "gold-lg": "0 8px 40px rgba(201,168,76,0.35)",
         "card": "0 4px 20px rgba(0,0,0,0.08)",

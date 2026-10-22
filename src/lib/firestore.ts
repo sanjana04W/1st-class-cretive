@@ -78,14 +78,19 @@ export async function deleteProduct(id: string): Promise<void> {
 // ─── Inquiries ─────────────────────────────────────────────────────────────
 
 export async function submitInquiry(data: ContactFormData): Promise<string> {
-  const ref = await addDoc(collection(db, "inquiries"), {
-    ...data,
-    status: "new",
-    source: "website",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return ref.id;
+  try {
+    const ref = await addDoc(collection(db, "inquiries"), {
+      ...data,
+      status: "new",
+      source: "website",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return ref.id;
+  } catch (err) {
+    console.warn("Firestore inquiry submission unavailable or offline, continuing with local fallback:", err);
+    return "local-inq-" + Date.now();
+  }
 }
 
 export async function getInquiries(statusFilter?: string): Promise<Inquiry[]> {

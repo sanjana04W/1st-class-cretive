@@ -23,10 +23,18 @@ import {
   ChevronRight,
   Truck,
   Quote,
+  X,
+  Menu,
 } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import AdminTopbar from "@/components/admin/AdminTopbar";
 import { cn } from "@/lib/utils";
+import {
+  AdminRoleType,
+  getActiveAdminRole,
+  ROLE_PERMISSIONS,
+  getAdminOrders,
+} from "@/lib/admin-store";
 
 const NAV_ITEMS = [
   {
@@ -38,7 +46,6 @@ const NAV_ITEMS = [
     href: "/admin/orders",
     icon: ShoppingBag,
     label: "Order Management",
-    badge: "2",
   },
   {
     href: "/admin/products",
@@ -102,17 +109,17 @@ const NAV_ITEMS = [
   },
 ];
 
-import {
-  AdminRoleType,
-  getActiveAdminRole,
-  ROLE_PERMISSIONS,
-} from "@/lib/admin-store";
+interface AdminSidebarProps {
+  isMobile?: boolean;
+  onCloseMobile?: () => void;
+}
 
-function AdminSidebar() {
+function AdminSidebar({ isMobile, onCloseMobile }: AdminSidebarProps) {
   const { logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [role, setRole] = useState<AdminRoleType>("Owner");
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
 
   useEffect(() => {
     setRole(getActiveAdminRole());
@@ -121,6 +128,23 @@ function AdminSidebar() {
     };
     window.addEventListener("admin_role_changed", handleRoleChanged);
     return () => window.removeEventListener("admin_role_changed", handleRoleChanged);
+  }, []);
+
+  // Sync real-time pending orders count
+  useEffect(() => {
+    const syncCount = () => {
+      try {
+        const orders = getAdminOrders();
+        const pending = orders.filter((o) => o.status === "PENDING").length;
+        setPendingOrdersCount(pending);
+      } catch (e) {
+        console.warn("Could not sync pending order count:", e);
+      }
+    };
+
+    syncCount();
+    window.addEventListener("admin_orders_updated", syncCount);
+    return () => window.removeEventListener("admin_orders_updated", syncCount);
   }, []);
 
   const handleSignOut = async () => {
@@ -132,34 +156,48 @@ function AdminSidebar() {
   const visibleNavItems = NAV_ITEMS.filter((item) => roleConfig.allowedPaths.includes(item.href));
 
   return (
-    <aside className="w-64 bg-white border-r border-[#EFECE6] flex flex-col min-h-screen shrink-0 select-none">
-      {/* Brand & Logo Header */}
-      <div className="p-5 border-b border-[#EFECE6]">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#FAF6EC] border border-[#E9DFCE] flex items-center justify-center p-1.5 shrink-0 shadow-2xs">
+    <aside className="w-64 bg-white border-r border-[#EFECE6] flex flex-col h-full shrink-0 select-none">
+      {/* Brand & Logo Header - Prominently Displayed */}
+      <div className="p-4 border-b border-[#EFECE6] bg-white flex items-center justify-between">
+        <Link
+          href="/admin/dashboard"
+          onClick={onCloseMobile}
+          className="flex items-center gap-3 group min-w-0"
+        >
+          <div className="bg-[#FAF7F0] border border-[#E9DFCE] px-3 py-1.5 rounded-lg shadow-2xs flex items-center justify-center shrink-0 group-hover:border-[#C9A84C] transition-colors">
             <Image
               src="/logo.png"
-              alt="Logo"
-              width={36}
-              height={36}
-              className="object-contain"
+              alt="1st Class Creative"
+              width={140}
+              height={48}
+              className="h-10 w-auto object-contain"
+              priority
             />
           </div>
-          <div className="leading-tight">
-            <h2 className="font-heading font-black text-xs tracking-wider text-brand-charcoal uppercase">
+          <div className="leading-tight min-w-0">
+            <h2 className="font-heading font-black text-xs tracking-wider text-brand-charcoal uppercase truncate">
               1st Class
             </h2>
-            <h3 className="font-heading font-black text-xs tracking-wider text-brand-charcoal uppercase -mt-0.5">
+            <h3 className="font-heading font-black text-xs tracking-wider text-brand-charcoal uppercase -mt-0.5 truncate">
               Creative
             </h3>
-            <p className="text-[9px] font-semibold tracking-wider text-gray-400 uppercase mt-0.5">
-              OPERATIONS CONTROL PANEL
+            <p className="text-[9px] font-bold tracking-wider text-[#9A7A2E] uppercase mt-0.5">
+              Operations Panel
             </p>
           </div>
-        </div>
+        </Link>
+        {isMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Close navigation"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
-      {/* Nav Section */}
+      {/* Nav Section (Internally scrollable so sidebar stays docked) */}
       <div className="flex-1 px-3 py-4 overflow-y-auto space-y-6">
         <div>
           <div className="flex items-center justify-between px-3 mb-2">
@@ -177,10 +215,19 @@ function AdminSidebar() {
                 pathname === item.href ||
                 (item.href !== "/admin/dashboard" && pathname?.startsWith(item.href));
 
+              // Show dynamic badge for Order Management only when there are real pending orders
+              const badgeCount =
+                item.href === "/admin/orders"
+                  ? pendingOrdersCount > 0
+                    ? String(pendingOrdersCount)
+                    : null
+                  : null;
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={onCloseMobile}
                   className={cn(
                     "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 relative",
                     isActive
@@ -195,9 +242,9 @@ function AdminSidebar() {
                     )}
                   />
                   <span className="flex-1 truncate">{item.label}</span>
-                  {item.badge && (
-                    <span className="w-4 h-4 rounded-full bg-[#B88928] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                      {item.badge}
+                  {badgeCount && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-[#B88928] text-white text-[10px] font-bold flex items-center justify-center shrink-0 min-w-5">
+                      {badgeCount}
                     </span>
                   )}
                 </Link>
@@ -330,7 +377,13 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isLoginPage = pathname === "/admin/login";
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   // Derive topbar title from path
   const getPageTitle = () => {
@@ -350,18 +403,40 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return "Dashboard";
   };
 
-
   return (
     <AuthProvider>
       <AdminGuard>
         {isLoginPage ? (
           <>{children}</>
         ) : (
-          <div className="flex min-h-screen bg-[#FBF9F5] text-brand-charcoal font-body antialiased">
-            <AdminSidebar />
-            <div className="flex-1 flex flex-col min-w-0">
-              <AdminTopbar title={getPageTitle()} />
-              <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+          <div className="flex h-screen overflow-hidden bg-[#FBF9F5] text-brand-charcoal font-body antialiased">
+            {/* Desktop Fixed Left Navigation (never scrolls with page content) */}
+            <div className="hidden md:flex h-screen shrink-0">
+              <AdminSidebar />
+            </div>
+
+            {/* Mobile Drawer Off-Canvas Sidebar */}
+            {mobileMenuOpen && (
+              <div className="fixed inset-0 z-50 md:hidden flex">
+                {/* Dark Backdrop */}
+                <div
+                  className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+                {/* Sliding Navigation Drawer */}
+                <div className="relative z-50 w-72 max-w-[85vw] h-full bg-white shadow-2xl flex flex-col animate-fade-in">
+                  <AdminSidebar isMobile onCloseMobile={() => setMobileMenuOpen(false)} />
+                </div>
+              </div>
+            )}
+
+            {/* Main Content Area (Scrolls independently) */}
+            <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+              <AdminTopbar
+                title={getPageTitle()}
+                onOpenMobileMenu={() => setMobileMenuOpen(true)}
+              />
+              <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
                 {children}
               </main>
             </div>
