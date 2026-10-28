@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,13 +24,22 @@ function PortfolioContent() {
   const searchParams = useSearchParams();
   const initialCat = searchParams.get("cat") ?? "all";
   const [activeCat, setActiveCat] = useState(initialCat);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [lightbox, setLightbox] = useState<null | CollectionItem>(null);
   const { addToCart } = useCart();
   const { products: liveItems } = useLiveProducts();
 
+  // 300ms debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchInput);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const filtered = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = debouncedQuery.toLowerCase().trim();
     return liveItems.filter((i) => {
       const matchesCat = activeCat === "all" || i.category === activeCat;
       if (!matchesCat) return false;
@@ -42,7 +51,7 @@ function PortfolioContent() {
       const tagsMatch = i.tags?.some((t) => t.toLowerCase().includes(q)) ?? false;
       return titleMatch || catMatch || descMatch || tagsMatch;
     });
-  }, [activeCat, searchQuery, liveItems]);
+  }, [activeCat, debouncedQuery, liveItems]);
 
   return (
     <>
@@ -53,14 +62,17 @@ function PortfolioContent() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by product name, category, or keyword..."
             className="w-full pl-11 pr-10 py-3 rounded-md bg-white border border-[#E5E1D8] text-sm text-[#2C2C2C] placeholder:text-gray-400 focus:outline-none focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C] shadow-2xs transition-all"
           />
-          {searchQuery && (
+          {searchInput && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                setSearchInput("");
+                setDebouncedQuery("");
+              }}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-brand-charcoal"
               aria-label="Clear search"
             >
@@ -88,22 +100,20 @@ function PortfolioContent() {
         </div>
 
         {/* Results Count & Active Search indicator */}
-        {(searchQuery || activeCat !== "all") && (
+        {(debouncedQuery || activeCat !== "all") && (
           <div className="flex items-center justify-between text-xs text-gray-500 pt-1 px-1">
             <span>
               Showing <strong className="text-brand-charcoal">{filtered.length}</strong> creations
-              {searchQuery && (
-                <> for &ldquo;<span className="text-[#9A7A2E]">{searchQuery}</span>&rdquo;</>
+              {debouncedQuery && (
+                <> for &ldquo;<span className="text-[#9A7A2E]">{debouncedQuery}</span>&rdquo;</>
               )}
             </span>
-            {(searchQuery || activeCat !== "all") && (
-              <button
-                onClick={() => { setActiveCat("all"); setSearchQuery(""); }}
-                className="text-[#9A7A2E] hover:underline font-semibold"
-              >
-                Clear all filters
-              </button>
-            )}
+            <button
+              onClick={() => { setActiveCat("all"); setSearchInput(""); setDebouncedQuery(""); }}
+              className="text-[#9A7A2E] hover:underline font-semibold"
+            >
+              Clear all filters
+            </button>
           </div>
         )}
       </div>
@@ -216,8 +226,24 @@ function PortfolioContent() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-gray-400 text-lg">No items in this category yet.</p>
+        <div className="text-center py-16 px-4 bg-white rounded-lg border border-[#E8E4DC] my-8 shadow-xs">
+          <div className="w-12 h-12 rounded-full bg-brand-champagne/40 text-[#9A7A2E] flex items-center justify-center mx-auto mb-3">
+            <Search className="w-6 h-6" />
+          </div>
+          <h3 className="font-heading text-lg font-bold text-brand-charcoal mb-1">
+            {debouncedQuery ? `No creations found for "${debouncedQuery}"` : "No items in this category"}
+          </h3>
+          <p className="text-sm text-gray-500 max-w-md mx-auto mb-5">
+            {debouncedQuery
+              ? "Try checking for spelling errors, using simpler keywords, or clearing your active category filter."
+              : "We are currently crafting new pieces for this collection. Please check back soon or request a custom order!"}
+          </p>
+          <button
+            onClick={() => { setActiveCat("all"); setSearchInput(""); setDebouncedQuery(""); }}
+            className="btn-primary text-xs"
+          >
+            Reset Filters & View All
+          </button>
         </div>
       )}
 

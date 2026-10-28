@@ -441,56 +441,58 @@ export default function AdminCategoriesPage() {
               {materials.length} items
             </span>
           </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-[#FAF9F5] border-b border-[#EFECE6]">
-                <th className="px-6 py-3 text-left w-2/5">Material</th>
-                <th className="px-6 py-3 text-left w-1/5">Type</th>
-                <th className="px-6 py-3 text-left">Notes</th>
-                <th className="px-6 py-3 text-right w-44">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#F5F2EB]">
-              {materials.map(m => (
-                <tr key={m.id} className="hover:bg-[#FBF9F5] transition-colors">
-                  <td className="px-6 py-3.5">
-                    <span className="font-semibold text-[#2C2C2C]">{m.name}</span>
-                  </td>
-                  <td className="px-6 py-3.5">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FAF3E0] text-[#9A7A2E] border border-[#DEC47F]/40 whitespace-nowrap">
-                      {m.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3.5 text-gray-500">{m.note}</td>
-                  <td className="px-6 py-3.5 text-right w-44 whitespace-nowrap">
-                    <div className="inline-flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => {
-                          const n = prompt("Update material name:", m.name); if (!n) return;
-                          const t = prompt("Update type:", m.type) || m.type;
-                          const note = prompt("Update notes:", m.note) || "";
-                          setMaterials(prev => prev.map(x => x.id === m.id ? { ...x, name: n, type: t, note } : x));
-                          toast.success(`"${n}" updated.`);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2C2C2C] bg-white border border-[#E0DCD3] rounded-md hover:border-[#C9A84C] hover:text-[#9A7A2E] hover:bg-[#FAF6EC] transition-all shadow-xs"
-                      >
-                        <Edit2 className="w-3.5 h-3.5 text-[#9A7A2E]" /> Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          setMaterials(prev => prev.filter(x => x.id !== m.id));
-                          toast.success("Material removed.");
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-md hover:bg-rose-100 hover:border-rose-200 transition-all shadow-xs"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Delete
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-[#FAF9F5] border-b border-[#EFECE6]">
+                  <th className="px-6 py-3 text-left w-2/5">Material</th>
+                  <th className="px-6 py-3 text-left w-1/5">Type</th>
+                  <th className="px-6 py-3 text-left">Notes</th>
+                  <th className="px-6 py-3 text-right w-44">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#F5F2EB]">
+                {materials.map(m => (
+                  <tr key={m.id} className="hover:bg-[#FBF9F5] transition-colors">
+                    <td className="px-6 py-3.5">
+                      <span className="font-semibold text-[#2C2C2C]">{m.name}</span>
+                    </td>
+                    <td className="px-6 py-3.5">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FAF3E0] text-[#9A7A2E] border border-[#DEC47F]/40 whitespace-nowrap">
+                        {m.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3.5 text-gray-500">{m.note}</td>
+                    <td className="px-6 py-3.5 text-right w-44 whitespace-nowrap">
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => {
+                            const n = prompt("Update material name:", m.name); if (!n) return;
+                            const t = prompt("Update type:", m.type) || m.type;
+                            const note = prompt("Update notes:", m.note) || "";
+                            setMaterials(prev => prev.map(x => x.id === m.id ? { ...x, name: n, type: t, note } : x));
+                            toast.success(`"${n}" updated.`);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2C2C2C] bg-white border border-[#E0DCD3] rounded-md hover:border-[#C9A84C] hover:text-[#9A7A2E] hover:bg-[#FAF6EC] transition-all shadow-xs"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-[#9A7A2E]" /> Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            setMaterials(prev => prev.filter(x => x.id !== m.id));
+                            toast.success("Material removed.");
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-md hover:bg-rose-100 hover:border-rose-200 transition-all shadow-xs"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <div className="px-6 py-4 border-t border-[#EFECE6] bg-[#FAF9F5]">
             <button
               onClick={() => {

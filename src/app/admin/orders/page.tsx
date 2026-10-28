@@ -86,10 +86,16 @@ export default function AdminOrdersPage() {
         );
         if (match) {
           setInspectOrder(match);
+          markOrderNotificationRead(match.orderRef);
         }
       }
     }
   }, []);
+
+  const handleInspectOrder = (order: AdminOrder) => {
+    setInspectOrder(order);
+    markOrderNotificationRead(order.orderRef);
+  };
 
   const handleUpdateStatus = (orderId: string, newStatus: AdminOrder["status"]) => {
     const target = orders.find((o) => o.id === orderId);
@@ -223,7 +229,7 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* Search Input matching Image 2 */}
-        <div className="relative min-w-[260px] md:w-80">
+        <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -323,7 +329,7 @@ export default function AdminOrdersPage() {
 
                         {/* Inspect button matching Image 2 */}
                         <button
-                          onClick={() => setInspectOrder(order)}
+                          onClick={() => handleInspectOrder(order)}
                           className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[#DEC47F] text-[#8C6D27] hover:bg-[#FAF5E8] text-xs font-semibold transition-colors shadow-2xs"
                         >
                           <Eye className="w-3.5 h-3.5" />

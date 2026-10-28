@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
           {pendingOrders.map((order) => (
             <div
               key={order.id}
-              className="p-5 flex items-center justify-between hover:bg-[#FAF9F5] transition-colors"
+              className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#FAF9F5] transition-colors"
             >
               <div>
                 <p className="font-bold text-sm text-brand-charcoal">
@@ -126,7 +126,7 @@ export default function AdminDashboardPage() {
                   {order.customerName} - {order.district}
                 </p>
               </div>
-              <div className="text-right flex items-center gap-4">
+              <div className="text-left sm:text-right flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
                 <span className="font-heading font-bold text-sm tabular-nums text-brand-charcoal">
                   LKR {order.totalAmount.toLocaleString()}
                 </span>

@@ -130,8 +130,11 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-advance Why Us luxury slideshow
+  // Auto-advance Why Us luxury slideshow (respects prefers-reduced-motion)
   useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
     const timer = setInterval(() => {
       setWhyUsSlideIndex((prev) => (prev + 1) % whyUsSlides.length);
     }, 5000);
@@ -377,15 +380,16 @@ export default function HomePage() {
             <div
               key={slide.image}
               className={cn(
-                "absolute inset-0 transition-opacity duration-1000",
+                "absolute inset-0 transition-opacity duration-1000 motion-reduce:transition-none",
                 idx === whyUsSlideIndex ? "opacity-35 scale-105" : "opacity-0 scale-100",
-                "transition-transform duration-[6000ms] ease-out"
+                "transition-transform duration-[6000ms] ease-out motion-reduce:transform-none"
               )}
             >
               <Image
                 src={slide.image}
                 alt="1st Class Creative Craftsmanship"
                 fill
+                loading="lazy"
                 className="object-cover object-center"
                 sizes="100vw"
               />

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
+import ClientToaster from "@/components/ClientToaster";
 
 export const metadata: Metadata = {
   title: {
@@ -58,30 +58,7 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen bg-brand-cream font-body antialiased">
         {children}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3500,
-            style: {
-              background: "#2C2C2C",
-              color: "#fff",
-              borderRadius: "8px",
-              fontFamily: "Lato, sans-serif",
-              fontSize: "13px",
-              padding: "12px 16px",
-              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
-              border: "1px solid #3E3E3E",
-            },
-            success: {
-              duration: 3500,
-              iconTheme: { primary: "#C9A84C", secondary: "#fff" },
-            },
-            error: {
-              duration: 4500,
-              iconTheme: { primary: "#C8687A", secondary: "#fff" },
-            },
-          }}
-        />
+        <ClientToaster />
       </body>
     </html>
   );

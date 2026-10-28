@@ -1,0 +1,49 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Inquiries: unauthenticated visitors can create (submit contact form),
+    // but cannot read, update, or delete inquiry documents.
+    match /inquiries/{inquiryId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Orders: unauthenticated visitors can create an order on checkout,
+    // only authenticated staff/admin can read, update, or delete.
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Products: public can read, only admin can write
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Categories: public can read, only admin can write
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Promotions: public can read active promotions, admin can write
+    match /promotions/{promoId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Testimonials: public can read testimonials, admin can write
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Default catch-all
+    match /{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

@@ -98,6 +98,18 @@ export default function Navbar() {
     setMobileCollectionOpen(false);
   }, [pathname]);
 
+  // Handle ESC key to dismiss mega menu
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMegaOpen(false);
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleMouseEnterMega = () => {
     if (megaTimeoutRef.current) clearTimeout(megaTimeoutRef.current);
     setMegaOpen(true);
@@ -160,9 +172,17 @@ export default function Navbar() {
                   className="relative py-2"
                   onMouseEnter={handleMouseEnterMega}
                   onMouseLeave={handleMouseLeaveMega}
+                  onFocus={handleMouseEnterMega}
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setMegaOpen(false);
+                    }
+                  }}
                 >
                   <Link
                     href={href}
+                    aria-expanded={megaOpen}
+                    aria-haspopup="true"
                     className={cn(
                       "font-medium text-sm tracking-wide transition-colors duration-200 relative group flex items-center gap-1",
                       isActive

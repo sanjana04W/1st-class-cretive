@@ -213,13 +213,20 @@ export default function ContactPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-brand-charcoal mb-1.5">Email Address</label>
+                        <label className="block text-sm font-medium text-brand-charcoal mb-1.5">Email Address *</label>
                         <input
-                          {...register("email")}
+                          {...register("email", {
+                            required: "Email is required",
+                            pattern: {
+                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                              message: "Please enter a valid email address",
+                            },
+                          })}
                           className="form-input"
                           placeholder="your@email.com"
                           type="email"
                         />
+                        {errors.email && <p className="text-brand-rose text-xs mt-1">{errors.email.message}</p>}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-brand-charcoal mb-1.5">Enquiry Type *</label>

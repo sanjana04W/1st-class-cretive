@@ -200,7 +200,7 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Search */}
-        <div className="relative min-w-[240px] md:w-72">
+        <div className="relative w-full md:w-72">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
