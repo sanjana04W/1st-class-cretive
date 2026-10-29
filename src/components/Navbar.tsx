@@ -138,22 +138,22 @@ export default function Navbar() {
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
 
-        {/* ── Logo with Enhanced Contrast & Framing ── */}
+        {/* ── Logo ── */}
         <Link href="/" className="flex items-center shrink-0 group">
           <div
             className={cn(
-              "transition-all duration-300 flex items-center justify-center px-3 py-1.5 rounded-md",
+              "transition-all duration-300 flex items-center justify-center rounded-lg",
               isTransparent
-                ? "bg-white/95 backdrop-blur-md shadow-md border border-[#C9A84C]/40 hover:bg-white"
-                : "bg-brand-cream/80 border border-[#E8E4DC] hover:border-[#C9A84C]/40"
+                ? "bg-white shadow-lg px-3 py-2 border border-[#C9A84C]/30 hover:shadow-xl"
+                : "bg-white px-2 py-1 border border-[#E8E4DC] hover:border-[#C9A84C]/40 shadow-sm"
             )}
           >
             <Image
               src="/logo.png"
               alt="1st Class Creative"
-              width={145}
-              height={52}
-              className="h-10 sm:h-11 md:h-12 w-auto object-contain"
+              width={180}
+              height={64}
+              className="h-12 sm:h-14 w-auto object-contain"
               priority
             />
           </div>

@@ -164,13 +164,13 @@ function AdminSidebar({ isMobile, onCloseMobile }: AdminSidebarProps) {
           onClick={onCloseMobile}
           className="flex items-center gap-3 group min-w-0"
         >
-          <div className="bg-[#FAF7F0] border border-[#E9DFCE] px-3 py-1.5 rounded-lg shadow-2xs flex items-center justify-center shrink-0 group-hover:border-[#C9A84C] transition-colors">
+          <div className="bg-white border border-[#E9DFCE] px-3 py-2 rounded-lg shadow-sm flex items-center justify-center shrink-0 group-hover:border-[#C9A84C] transition-colors">
             <Image
               src="/logo.png"
               alt="1st Class Creative"
-              width={140}
-              height={48}
-              className="h-10 w-auto object-contain"
+              width={160}
+              height={56}
+              className="h-12 w-auto object-contain"
               priority
             />
           </div>
