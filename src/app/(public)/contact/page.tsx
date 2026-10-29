@@ -35,22 +35,10 @@ export default function ContactPage() {
     formState: { errors },
   } = useForm<ContactFormData>();
 
-  const onSubmit = async (data: ContactFormData) => {
+  const onSubmit = (data: ContactFormData) => {
     setSubmitting(true);
     try {
-      // Attempt firestore submission with a short timeout so user is never blocked
-      const firestorePromise = submitInquiry(data);
-      const timeoutPromise = new Promise<string>((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), 2500)
-      );
-
-      try {
-        await Promise.race([firestorePromise, timeoutPromise]);
-      } catch (e) {
-        console.warn("Firestore sync skipped or offline, storing in local customer inquiries:", e);
-      }
-
-      // Persist to admin messages / inquiries store in localStorage
+      // 1. Save to localStorage IMMEDIATELY — synchronous, always works
       const typeLabel = inquiryTypes.find((t) => t.value === data.inquiryType)?.label || data.inquiryType;
       const newInquiry = {
         id: "inq-" + Date.now(),
@@ -59,26 +47,33 @@ export default function ContactPage() {
         senderPhone: data.phone || "Not provided",
         subject: `${typeLabel} Enquiry - Website Form`,
         message: data.message,
-        timestamp: "Just now",
+        timestamp: new Date().toISOString(),
         status: "New" as const,
         notes: `Submitted from website contact form for ${typeLabel}.`,
       };
 
-      try {
-        if (typeof window !== "undefined") {
+      if (typeof window !== "undefined") {
+        try {
           const stored = localStorage.getItem("admin_customer_inquiries");
           const list = stored ? JSON.parse(stored) : [];
           localStorage.setItem("admin_customer_inquiries", JSON.stringify([newInquiry, ...list]));
+        } catch {
+          /* ignore storage errors */
         }
-      } catch (storageErr) {
-        console.warn("Could not save to localStorage:", storageErr);
       }
 
+      // 2. Fire Firestore in the background — completely non-blocking, fire-and-forget
+      //    Never await this; Firebase addDoc can hang indefinitely when offline or rules are pending
+      submitInquiry(data).catch((err) => {
+        console.warn("Background Firestore sync failed (non-critical):", err);
+      });
+
+      // 3. Immediately show success — do NOT await any network call
       setSubmitted(true);
       reset();
       toast.success("Your enquiry was sent! We'll be in touch soon. ✨");
     } catch (err) {
-      console.error(err);
+      console.error("Contact form error:", err);
       toast.error("Something went wrong. Please try WhatsApp or email us directly.");
     } finally {
       setSubmitting(false);
