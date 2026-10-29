@@ -91,13 +91,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand column */}
           <div className="lg:col-span-2">
-            <div className="inline-block bg-white/95 px-4 py-2 rounded-md mb-5 shadow-sm border border-brand-gold/30">
+            <div className="mb-5 inline-block">
               <Image
                 src="/logo.png"
                 alt="1st Class Creative logo"
                 width={160}
                 height={60}
-                className="h-12 w-auto object-contain"
+                className="h-14 w-auto object-contain drop-shadow-sm"
               />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
