@@ -7,11 +7,18 @@ import type { UserOrderHistory } from "@/context/CustomerProfileContext";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ShieldCheck, Mail, RotateCcw, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Mail, RotateCcw, AlertCircle, Loader2, Tag, X } from "lucide-react";
 import { formatLKR } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { sendVerificationEmail } from "@/lib/email";
-import { registerNewAdminOrder } from "@/lib/admin-store";
+import {
+  registerNewAdminOrder,
+  getDeliverySettings,
+  DEFAULT_DELIVERY_SETTINGS,
+  type DeliverySettings,
+  loadPromos,
+  type PromoCode,
+} from "@/lib/admin-store";
 
 /* ─────────────────────────────────────────
    Constants
@@ -80,8 +87,58 @@ export default function CheckoutPage() {
   const [placedOrderNumber, setPlacedOrderNumber] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const deliveryFee  = district.toLowerCase() === "colombo" ? 200 : 350;
-  const totalAmount  = subtotal + deliveryFee;
+  /* ── Live Delivery & Promo States synced with Admin Panel ── */
+  const [deliverySettings, setDeliverySettings] = useState<DeliverySettings>(DEFAULT_DELIVERY_SETTINGS);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+
+  useEffect(() => {
+    const syncDelivery = () => {
+      setDeliverySettings(getDeliverySettings());
+    };
+    syncDelivery();
+    window.addEventListener("admin_delivery_updated", syncDelivery);
+    window.addEventListener("storage", syncDelivery);
+    return () => {
+      window.removeEventListener("admin_delivery_updated", syncDelivery);
+      window.removeEventListener("storage", syncDelivery);
+    };
+  }, []);
+
+  const isFreeShipping = subtotal >= deliverySettings.freeShippingThreshold || appliedPromo?.discountType === "shipping";
+  const isColomboZone = ["colombo", "gampaha"].includes((district || "").toLowerCase().trim());
+  const deliveryFee = isFreeShipping
+    ? 0
+    : isColomboZone
+    ? deliverySettings.colomboFee
+    : deliverySettings.outstationFee;
+
+  const discountAmount = appliedPromo
+    ? appliedPromo.discountType === "percentage"
+      ? Math.round((subtotal * appliedPromo.discountValue) / 100)
+      : appliedPromo.discountType === "fixed"
+      ? Math.min(subtotal, appliedPromo.discountValue)
+      : 0
+    : 0;
+
+  const totalAmount = Math.max(0, subtotal - discountAmount + deliveryFee);
+
+  const handleApplyPromo = () => {
+    const q = promoInput.trim().toUpperCase();
+    if (!q) return;
+    const allPromos = loadPromos();
+    const match = allPromos.find((p) => p.code.toUpperCase() === q && p.isActive);
+    if (!match) {
+      toast.error("Invalid or expired promo code");
+      return;
+    }
+    if (subtotal < match.minOrder) {
+      toast.error(`Minimum order amount for this code is ${formatLKR(match.minOrder)}`);
+      return;
+    }
+    setAppliedPromo(match);
+    toast.success(`Coupon applied: ${match.description || match.code}`);
+  };
 
   /* ── Countdown timer ── */
   const startResendCountdown = () => {
@@ -455,15 +512,67 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Promo Code Input */}
+              <div className="pt-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                      placeholder="Promo Code"
+                      className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-[#C9A84C] uppercase"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleApplyPromo}
+                    className="px-3 py-2 bg-[#FAF5E8] hover:bg-[#F2E8D0] text-[#8C6D27] border border-[#E9DFCE] text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {appliedPromo && (
+                  <div className="mt-2 flex items-center justify-between text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1.5 rounded-lg">
+                    <span>
+                      Code <strong>{appliedPromo.code}</strong> applied ({appliedPromo.description})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAppliedPromo(null)}
+                      className="text-emerald-700 hover:text-emerald-900 ml-2"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Totals */}
               <div className="space-y-2 text-xs border-t border-b border-gray-100 py-4">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
                   <span className="font-semibold text-brand-charcoal">{formatLKR(subtotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-semibold">
+                    <span>Discount ({appliedPromo?.code})</span>
+                    <span>-{formatLKR(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-gray-600">
-                  <span>Delivery ({district})</span>
-                  <span className="font-semibold text-brand-charcoal">{formatLKR(deliveryFee)}</span>
+                  <span>
+                    Delivery ({district})
+                    {isFreeShipping && (
+                      <span className="ml-1 text-[10px] font-bold text-emerald-600 uppercase">
+                        (Free Shipping)
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-semibold text-brand-charcoal">
+                    {deliveryFee === 0 ? "FREE" : formatLKR(deliveryFee)}
+                  </span>
                 </div>
               </div>
 

@@ -83,7 +83,12 @@ function loadTestimonials(): Testimonial[] {
   }
 }
 function saveTestimonials(t: Testimonial[]) {
-  if (typeof window !== "undefined") localStorage.setItem(STORAGE_KEY, JSON.stringify(t));
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(t));
+    try {
+      window.dispatchEvent(new CustomEvent("admin_testimonials_updated", { detail: t }));
+    } catch {}
+  }
 }
 
 // ─── Star Input ───────────────────────────────────────────────────────────────

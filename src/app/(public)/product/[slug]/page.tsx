@@ -35,12 +35,27 @@ interface PageProps {
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
   const { addToCart } = useCart();
-  const { products: liveItems } = useLiveProducts();
+  const { products: liveItems, isLoaded } = useLiveProducts();
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState("Standard Custom");
 
   // Find product by slug or id from live items
   const product: CollectionItem | undefined =
     liveItems.find((i) => i.slug === slug || i.id === slug) ||
     collectionItems.find((i) => i.slug === slug || i.id === slug);
+
+  if (!product && !isLoaded) {
+    return (
+      <div className="pt-32 pb-20 bg-[#FBF9F5] min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-gray-500 font-medium">Loading handcrafted product...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     notFound();
@@ -56,10 +71,6 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     product.src,
     ...(relatedProducts.slice(0, 3).map((r) => r.src)),
   ].filter(Boolean);
-
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [selectedVariant, setSelectedVariant] = useState("Standard Custom");
 
   const prevImage = () => {
     setActiveImageIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
@@ -291,10 +302,25 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               )}
             </div>
 
-            {/* Stock status indicator matching Screenshot 1 & 2 */}
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#D96B64]">
-              <Sparkles className="w-4 h-4 text-[#D96B64]" />
-              <span>Only 3 left in studio stock! Handcrafted on demand.</span>
+            {/* Stock status indicator matching live admin stock */}
+            <div
+              className={cn(
+                "flex items-center gap-2 text-xs font-semibold",
+                !product.inStock || (product.stock !== undefined && product.stock <= 0)
+                  ? "text-rose-600"
+                  : (product.stock ?? 10) <= 5
+                  ? "text-[#D96B64]"
+                  : "text-emerald-700"
+              )}
+            >
+              <Sparkles className="w-4 h-4 shrink-0" />
+              <span>
+                {!product.inStock || (product.stock !== undefined && product.stock <= 0)
+                  ? "Currently out of stock. Handcrafted to order."
+                  : (product.stock ?? 10) <= 5
+                  ? `Only ${product.stock ?? 3} left in studio stock! Handcrafted on demand.`
+                  : `${product.stock} items currently in studio stock ready for dispatch.`}
+              </span>
             </div>
 
             {/* Quantity Selector matching Screenshot 1 & 2 */}
@@ -325,10 +351,20 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <button
                 onClick={handleAddToCart}
-                className="w-full py-3.5 px-4 rounded-xl bg-[#C9A84C] hover:bg-[#B3933B] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                disabled={!product.inStock || (product.stock !== undefined && product.stock <= 0)}
+                className={cn(
+                  "w-full py-3.5 px-4 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors",
+                  !product.inStock || (product.stock !== undefined && product.stock <= 0)
+                    ? "bg-gray-400 cursor-not-allowed opacity-80"
+                    : "bg-[#C9A84C] hover:bg-[#B3933B] cursor-pointer"
+                )}
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Add to Cart</span>
+                <span>
+                  {!product.inStock || (product.stock !== undefined && product.stock <= 0)
+                    ? "Out of Stock"
+                    : "Add to Cart"}
+                </span>
               </button>
 
               <a

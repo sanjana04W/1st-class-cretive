@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { getAdminProducts } from "@/lib/admin-store";
 
 export interface CartItem {
   id: string;
@@ -73,6 +74,45 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // fallback
     }
     setIsLoaded(true);
+  }, []);
+
+  // Sync cart item prices with live product updates from admin panel
+  useEffect(() => {
+    const syncPrices = () => {
+      try {
+        const liveProds = getAdminProducts();
+        if (!liveProds || liveProds.length === 0) return;
+        const prodMap = new Map(liveProds.map((p) => [p.id, p]));
+        setItems((prev) => {
+          let modified = false;
+          const updated = prev.map((item) => {
+            const p = prodMap.get(item.id);
+            if (p) {
+              if (item.price !== p.price || item.title !== p.title || item.image !== p.image) {
+                modified = true;
+                return {
+                  ...item,
+                  price: p.price,
+                  originalPrice: p.originalPrice,
+                  title: p.title,
+                  image: p.image || item.image,
+                };
+              }
+            }
+            return item;
+          });
+          return modified ? updated : prev;
+        });
+      } catch {}
+    };
+
+    syncPrices();
+    window.addEventListener("admin_products_updated", syncPrices);
+    window.addEventListener("storage", syncPrices);
+    return () => {
+      window.removeEventListener("admin_products_updated", syncPrices);
+      window.removeEventListener("storage", syncPrices);
+    };
   }, []);
 
   // Save to localStorage

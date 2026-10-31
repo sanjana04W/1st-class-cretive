@@ -1,15 +1,32 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2, Plus, Minus, ArrowRight, ArrowLeft, ShieldCheck, Truck, Sparkles } from "lucide-react";
 import { formatLKR } from "@/lib/utils";
+import { getDeliverySettings, DEFAULT_DELIVERY_SETTINGS } from "@/lib/admin-store";
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, subtotal, totalItems } = useCart();
+  const [deliverySettings, setDeliverySettings] = useState(DEFAULT_DELIVERY_SETTINGS);
 
-  const deliveryFee = 200; // Flat estimate for Colombo / Western Province
+  useEffect(() => {
+    const syncDelivery = () => {
+      setDeliverySettings(getDeliverySettings());
+    };
+    syncDelivery();
+    window.addEventListener("admin_delivery_updated", syncDelivery);
+    window.addEventListener("storage", syncDelivery);
+    return () => {
+      window.removeEventListener("admin_delivery_updated", syncDelivery);
+      window.removeEventListener("storage", syncDelivery);
+    };
+  }, []);
+
+  const isFreeShipping = subtotal >= deliverySettings.freeShippingThreshold;
+  const deliveryFee = isFreeShipping ? 0 : deliverySettings.colomboFee;
   const totalAmount = subtotal + deliveryFee;
 
   return (

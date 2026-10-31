@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { UserOrderHistory } from "@/context/CustomerProfileContext";
 import { formatLKR } from "@/lib/utils";
+import { getAdminOrders, mapAdminStatusToCustomer } from "@/lib/admin-store";
 
 /* ── helpers ── */
 function formatPlacedAt(iso: string) {
@@ -33,6 +34,22 @@ function formatPlacedAt(iso: string) {
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const raw = searchParams.get("order");
+
+  const [adminOrders, setAdminOrders] = useState(() =>
+    typeof window !== "undefined" ? getAdminOrders() : []
+  );
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setAdminOrders(getAdminOrders());
+    };
+    window.addEventListener("admin_orders_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("admin_orders_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
 
   if (!raw) {
     return (
@@ -60,6 +77,23 @@ function OrderConfirmationContent() {
     );
   }
 
+  const matchedAdmin = adminOrders.find(
+    (a) => a.orderRef.toLowerCase().trim() === (order.orderNumber || "").toLowerCase().trim()
+  );
+  const currentStatus = matchedAdmin
+    ? mapAdminStatusToCustomer(matchedAdmin.status)
+    : order.status || "Pending";
+
+  const getStatusBadge = (st: string) => {
+    const s = (st || "").toLowerCase();
+    if (s === "confirmed") return "border-blue-300 bg-blue-50 text-blue-700";
+    if (s === "processing") return "border-indigo-300 bg-indigo-50 text-indigo-700";
+    if (s === "dispatched") return "border-purple-300 bg-purple-50 text-purple-700";
+    if (s === "delivered" || s === "completed") return "border-emerald-300 bg-emerald-50 text-emerald-700";
+    if (s === "cancelled") return "border-rose-300 bg-rose-50 text-rose-700";
+    return "border-amber-300 bg-amber-50 text-amber-800";
+  };
+
   const placedAt = order.placedAt ? formatPlacedAt(order.placedAt) : order.date;
 
   return (
@@ -77,9 +111,14 @@ function OrderConfirmationContent() {
           <p className="text-sm text-gray-500 max-w-md mx-auto">
             Your order has been received successfully. Below are your reference and shipping expectations.
           </p>
-          {/* Order number pill */}
-          <div className="inline-flex items-center gap-2 border border-gray-300 bg-white rounded-full px-5 py-2 text-xs font-bold text-[#2C2C2C] shadow-xs uppercase tracking-wider">
-            ORDER NUMBER: {order.orderNumber}
+          {/* Order number and status pills */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="inline-flex items-center gap-2 border border-gray-300 bg-white rounded-full px-5 py-2 text-xs font-bold text-[#2C2C2C] shadow-xs uppercase tracking-wider">
+              ORDER NUMBER: {order.orderNumber}
+            </div>
+            <div className={`inline-flex items-center gap-1.5 border rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider ${getStatusBadge(currentStatus)}`}>
+              STATUS: {currentStatus}
+            </div>
           </div>
         </div>
 

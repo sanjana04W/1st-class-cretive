@@ -5,6 +5,13 @@ import { Truck, Save, Package, MapPin, Clock, ToggleLeft, ToggleRight, Info } fr
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
+import {
+  DeliverySettings,
+  DEFAULT_DELIVERY_SETTINGS,
+  getDeliverySettings,
+  saveDeliverySettings,
+} from "@/lib/admin-store";
+
 interface DeliveryZone {
   id: string;
   zone: string;
@@ -36,17 +43,27 @@ const zoneBadgeClass = (color: string) => {
 };
 
 export default function AdminDeliveryPage() {
-  const [codEnabled, setCodEnabled] = useState(true);
-  const [bankTransferEnabled, setBankTransferEnabled] = useState(true);
-  const [colomboFee, setColomboFee] = useState("350");
-  const [outstationFee, setOutstationFee] = useState("450");
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState("15000");
-  const [courierPartner, setCourierPartner] = useState("Pronto / Domex / PromptX");
-  const [processingDays, setProcessingDays] = useState("2–3");
+  const initial = typeof window !== "undefined" ? getDeliverySettings() : DEFAULT_DELIVERY_SETTINGS;
+  const [codEnabled, setCodEnabled] = useState(initial.codEnabled);
+  const [bankTransferEnabled, setBankTransferEnabled] = useState(initial.bankTransferEnabled);
+  const [colomboFee, setColomboFee] = useState(String(initial.colomboFee));
+  const [outstationFee, setOutstationFee] = useState(String(initial.outstationFee));
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(String(initial.freeShippingThreshold));
+  const [courierPartner, setCourierPartner] = useState(initial.courierPartner);
+  const [processingDays, setProcessingDays] = useState(initial.processingDays);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Delivery & payment settings saved successfully!");
+    saveDeliverySettings({
+      codEnabled,
+      bankTransferEnabled,
+      colomboFee: Number(colomboFee) || 350,
+      outstationFee: Number(outstationFee) || 450,
+      freeShippingThreshold: Number(freeShippingThreshold) || 15000,
+      courierPartner,
+      processingDays,
+    });
+    toast.success("Delivery & payment settings saved and published to website!");
   };
 
   return (

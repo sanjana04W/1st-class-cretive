@@ -20,6 +20,27 @@ const ALL_CATS: { value: string; label: string }[] = [
   { value: "gift-boxes", label: "Gift Boxes" },
 ];
 
+function getLivePortfolioCategories() {
+  if (typeof window === "undefined") return ALL_CATS;
+  try {
+    const raw = localStorage.getItem("admin_categories");
+    if (!raw) return ALL_CATS;
+    const cats = JSON.parse(raw);
+    if (!Array.isArray(cats) || cats.length === 0) return ALL_CATS;
+    const topLevel = cats.filter((c: any) => !c.parentId);
+    if (topLevel.length === 0) return ALL_CATS;
+    return [
+      { value: "all", label: "All Collections" },
+      ...topLevel.map((c: any) => ({
+        value: c.slug,
+        label: c.name,
+      })),
+    ];
+  } catch {
+    return ALL_CATS;
+  }
+}
+
 function PortfolioContent() {
   const searchParams = useSearchParams();
   const initialCat = searchParams.get("cat") ?? "all";
@@ -29,6 +50,21 @@ function PortfolioContent() {
   const [lightbox, setLightbox] = useState<null | CollectionItem>(null);
   const { addToCart } = useCart();
   const { products: liveItems } = useLiveProducts();
+
+  const [categories, setCategories] = useState(ALL_CATS);
+
+  useEffect(() => {
+    const syncCats = () => {
+      setCategories(getLivePortfolioCategories());
+    };
+    syncCats();
+    window.addEventListener("admin_categories_updated", syncCats);
+    window.addEventListener("storage", syncCats);
+    return () => {
+      window.removeEventListener("admin_categories_updated", syncCats);
+      window.removeEventListener("storage", syncCats);
+    };
+  }, []);
 
   // 300ms debounce
   useEffect(() => {
@@ -83,7 +119,7 @@ function PortfolioContent() {
 
         {/* Category Pills */}
         <div className="flex flex-wrap justify-center gap-2">
-          {ALL_CATS.map(({ value, label }) => (
+          {categories.map(({ value, label }) => (
             <button
               key={value}
               onClick={() => setActiveCat(value)}

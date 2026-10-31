@@ -24,6 +24,7 @@ export interface CollectionItem {
   featured?: boolean;
   isBestSeller?: boolean;
   inStock?: boolean;
+  stock?: number;
   tags?: string[];
   leadTime?: string;
   description?: string;

@@ -52,6 +52,7 @@ export function adminProductToCollectionItem(adminProd: AdminProduct): Collectio
     featured: adminProd.isFeatured,
     isBestSeller: existing?.isBestSeller ?? adminProd.isFeatured,
     inStock: adminProd.status !== "inactive" && adminProd.stock > 0,
+    stock: adminProd.stock,
     tags: existing?.tags || [adminProd.brand, adminProd.type, "Handcrafted"],
     leadTime: existing?.leadTime || "ships in 2-3 days",
     description:
@@ -82,8 +83,17 @@ export function getLiveCollectionItems(): CollectionItem[] {
  * Reacts immediately to changes in admin panel via localStorage and custom events.
  */
 export function useLiveProducts() {
-  const [products, setProducts] = useState<CollectionItem[]>(staticCollectionItems);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [products, setProducts] = useState<CollectionItem[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return getLiveCollectionItems();
+      } catch {
+        return staticCollectionItems;
+      }
+    }
+    return staticCollectionItems;
+  });
+  const [isLoaded, setIsLoaded] = useState(() => typeof window !== "undefined");
 
   const syncProducts = () => {
     try {

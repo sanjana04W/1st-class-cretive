@@ -98,7 +98,7 @@ const whyUs = [
 ];
 
 // ── Testimonials ──────────────────────────────────────────────────────────────
-const testimonials = [
+const DEFAULT_TESTIMONIALS = [
   { name: "Dilani P.", text: "Absolutely loved my anniversary frame! The quality and detail were beyond what I expected. Will order again!", rating: 5, product: "Custom Frame" },
   { name: "Nimasha K.", text: "Got personalised keychains for my whole bridal party. Everyone was obsessed. Thank you 1st Class Creative!", rating: 5, product: "Resin Keychain" },
   { name: "Amali R.", text: "The wedding invitations were stunning. So many compliments from our guests. 100% recommend!", rating: 5, product: "Wedding Invitations" },
@@ -106,6 +106,26 @@ const testimonials = [
   { name: "Sanda M.", text: "The cake box was even more beautiful in person. Really added to the whole presentation of my wedding cake.", rating: 5, product: "Cake Box" },
   { name: "Kavinda S.", text: "Fast response, great communication, and the final product was perfect. So happy with my keychain!", rating: 5, product: "Resin Keychain" },
 ];
+
+function getLiveTestimonials() {
+  if (typeof window === "undefined") return DEFAULT_TESTIMONIALS;
+  try {
+    const raw = localStorage.getItem("admin_testimonials");
+    if (!raw) return DEFAULT_TESTIMONIALS;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_TESTIMONIALS;
+    const active = parsed.filter((t: any) => t.isVisible !== false);
+    if (active.length === 0) return DEFAULT_TESTIMONIALS;
+    return active.map((t: any) => ({
+      name: t.name,
+      text: t.text,
+      rating: t.rating || 5,
+      product: t.productCategory || "Handcrafted Piece",
+    }));
+  } catch {
+    return DEFAULT_TESTIMONIALS;
+  }
+}
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -121,6 +141,21 @@ export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [whyUsSlideIndex, setWhyUsSlideIndex] = useState(0);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [testimonials, setTestimonials] = useState(DEFAULT_TESTIMONIALS);
+
+  // Sync live testimonials from admin panel
+  useEffect(() => {
+    const syncTestimonials = () => {
+      setTestimonials(getLiveTestimonials());
+    };
+    syncTestimonials();
+    window.addEventListener("admin_testimonials_updated", syncTestimonials);
+    window.addEventListener("storage", syncTestimonials);
+    return () => {
+      window.removeEventListener("admin_testimonials_updated", syncTestimonials);
+      window.removeEventListener("storage", syncTestimonials);
+    };
+  }, []);
 
   // Auto-advance hero
   useEffect(() => {

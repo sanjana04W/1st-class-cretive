@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { getAdminOrders, mapAdminStatusToCustomer } from "@/lib/admin-store";
 
 /* ─────────────────────────────────────────
    Types
@@ -151,17 +152,68 @@ export function CustomerProfileProvider({ children }: { children: React.ReactNod
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Restore session on mount
+  // Helper to cross-reference orders with the central admin orders store
+  const syncWithAdminOrders = (userProfile: UserProfile): UserProfile => {
+    try {
+      if (!userProfile.orders || userProfile.orders.length === 0) return userProfile;
+      const adminOrders = getAdminOrders();
+      if (!adminOrders || adminOrders.length === 0) return userProfile;
+
+      const adminMap = new Map(
+        adminOrders.map((ao) => [ao.orderRef.toLowerCase().trim(), mapAdminStatusToCustomer(ao.status)])
+      );
+
+      let changed = false;
+      const updatedOrders = userProfile.orders.map((ord) => {
+        const ref = (ord.orderNumber || ord.id || "").toLowerCase().trim();
+        if (adminMap.has(ref)) {
+          const newStatus = adminMap.get(ref)!;
+          if (ord.status !== newStatus) {
+            changed = true;
+            return { ...ord, status: newStatus };
+          }
+        }
+        return ord;
+      });
+
+      return changed ? { ...userProfile, orders: updatedOrders } : userProfile;
+    } catch {
+      return userProfile;
+    }
+  };
+
+  // Restore session on mount and sync with admin store
   useEffect(() => {
     const email = localStorage.getItem(STORAGE_KEY_CURRENT);
     if (email) {
       const db = readUsersDB();
       if (db[email]) {
-        setProfile(db[email]);
+        const synced = syncWithAdminOrders(db[email]);
+        setProfile(synced);
         setIsLoggedIn(true);
       }
     }
     setIsLoaded(true);
+  }, []);
+
+  // Listen for admin order updates in real-time
+  useEffect(() => {
+    const handleSync = () => {
+      setProfile((prev) => syncWithAdminOrders(prev));
+    };
+
+    window.addEventListener("admin_orders_updated", handleSync);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key?.includes("admin_panel_orders") || e.key?.includes("fcc_users_db")) {
+        handleSync();
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("admin_orders_updated", handleSync);
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
   // Persist profile changes back to the users DB

@@ -2,80 +2,14 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Pause, Play, Tag, Percent, BadgeDollarSign, TicketPercent } from "lucide-react";
+import {
+  PromoCode,
+  DEFAULT_PROMOS,
+  loadPromos,
+  savePromos,
+} from "@/lib/admin-store";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
-
-interface PromoCode {
-  id: string;
-  code: string;
-  discountType: "percentage" | "fixed" | "shipping";
-  discountValue: number;
-  minOrder: number;
-  description: string;
-  isActive: boolean;
-  usageCount: number;
-}
-
-const STORAGE_KEY = "admin_promo_codes";
-
-const DEFAULT_PROMOS: PromoCode[] = [
-  {
-    id: "promo-1",
-    code: "CREATIVE10",
-    discountType: "percentage",
-    discountValue: 10,
-    minOrder: 5000,
-    description: "10% OFF on orders above LKR 5,000",
-    isActive: true,
-    usageCount: 14,
-  },
-  {
-    id: "promo-2",
-    code: "1STCLASS500",
-    discountType: "fixed",
-    discountValue: 500,
-    minOrder: 10000,
-    description: "LKR 500 OFF on orders above LKR 10,000",
-    isActive: true,
-    usageCount: 7,
-  },
-  {
-    id: "promo-3",
-    code: "FREESHIP",
-    discountType: "shipping",
-    discountValue: 0,
-    minOrder: 15000,
-    description: "Free Shipping on orders above LKR 15,000",
-    isActive: false,
-    usageCount: 3,
-  },
-  {
-    id: "promo-4",
-    code: "BESPOKE20",
-    discountType: "percentage",
-    discountValue: 20,
-    minOrder: 8000,
-    description: "20% OFF bespoke handcraft orders above LKR 8,000",
-    isActive: true,
-    usageCount: 5,
-  },
-];
-
-function loadPromos(): PromoCode[] {
-  if (typeof window === "undefined") return DEFAULT_PROMOS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : DEFAULT_PROMOS;
-  } catch {
-    return DEFAULT_PROMOS;
-  }
-}
-
-function savePromos(promos: PromoCode[]) {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(promos));
-  }
-}
 
 const discountBadge = (p: PromoCode) => {
   if (p.discountType === "percentage") return `${p.discountValue}% OFF`;

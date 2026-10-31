@@ -29,7 +29,7 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-const collectionCategories = [
+const DEFAULT_COLLECTION_CATEGORIES = [
   {
     title: "Resin Creations",
     href: "/portfolio?cat=resin-creations",
@@ -68,6 +68,26 @@ const collectionCategories = [
   },
 ];
 
+function getLiveNavbarCategories() {
+  if (typeof window === "undefined") return DEFAULT_COLLECTION_CATEGORIES;
+  try {
+    const raw = localStorage.getItem("admin_categories");
+    if (!raw) return DEFAULT_COLLECTION_CATEGORIES;
+    const cats = JSON.parse(raw);
+    if (!Array.isArray(cats) || cats.length === 0) return DEFAULT_COLLECTION_CATEGORIES;
+    const topLevel = cats.filter((c: any) => !c.parentId);
+    if (topLevel.length === 0) return DEFAULT_COLLECTION_CATEGORIES;
+    return topLevel.map((c: any) => ({
+      title: c.name,
+      href: `/portfolio?cat=${c.slug}`,
+      desc: c.description || "Handcrafted bespoke artisanal piece",
+      tag: "Bespoke",
+    }));
+  } catch {
+    return DEFAULT_COLLECTION_CATEGORIES;
+  }
+}
+
 /** Pages that have a full-bleed dark hero at the very top — navbar can be transparent */
 const DARK_HERO_PAGES = ["/"];
 
@@ -76,6 +96,7 @@ export default function Navbar() {
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileCollectionOpen, setMobileCollectionOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [navCategories, setNavCategories] = useState(DEFAULT_COLLECTION_CATEGORIES);
   const megaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const pathname = usePathname();
@@ -83,6 +104,20 @@ export default function Navbar() {
   const { profile, isLoggedIn, logoutCustomer } = useCustomerProfile();
 
   const hasDarkHero = DARK_HERO_PAGES.includes(pathname);
+
+  // Sync live categories from admin Master Data
+  useEffect(() => {
+    const syncCats = () => {
+      setNavCategories(getLiveNavbarCategories());
+    };
+    syncCats();
+    window.addEventListener("admin_categories_updated", syncCats);
+    window.addEventListener("storage", syncCats);
+    return () => {
+      window.removeEventListener("admin_categories_updated", syncCats);
+      window.removeEventListener("storage", syncCats);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
@@ -217,7 +252,7 @@ export default function Navbar() {
                           href="/portfolio"
                           className="text-xs font-semibold text-[#C9A84C] hover:text-[#9A7A2E] flex items-center gap-1 group"
                         >
-                          View Full Catalog ({collectionCategories.length}+ categories)
+                          View Full Catalog ({navCategories.length}+ categories)
                           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                         </Link>
                       </div>
@@ -225,7 +260,7 @@ export default function Navbar() {
                       <div className="grid grid-cols-12 gap-6">
                         {/* Categories List (8 cols) */}
                         <div className="col-span-8 grid grid-cols-2 gap-3">
-                          {collectionCategories.map((cat) => (
+                          {navCategories.map((cat) => (
                             <Link
                               key={cat.href}
                               href={cat.href}
@@ -463,7 +498,7 @@ export default function Navbar() {
                       >
                         ✦ View All Collections & Search
                       </Link>
-                      {collectionCategories.map((cat) => (
+                      {navCategories.map((cat) => (
                         <Link
                           key={cat.href}
                           href={cat.href}

@@ -7,21 +7,16 @@ import {
   Plus, Edit2, Trash2, LayoutGrid, List, X,
   ExternalLink, Layers, Tag, Palette, Truck, FolderTree,
 } from "lucide-react";
+import {
+  CategoryItem,
+  INITIAL_CATEGORIES,
+  getAdminCategories,
+  saveAdminCategories,
+} from "@/lib/admin-store";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface CategoryItem {
-  id: string;
-  name: string;
-  slug: string;
-  order: number;
-  parentId?: string | null;
-  img?: string;
-  description?: string;
-  itemCount?: number;
-}
-
 interface TagItem { id: string; label: string; color: string; }
 interface MaterialItem { id: string; name: string; type: string; note: string; }
 interface DeliveryZone { id: string; zone: string; districts: string; days: string; fee: number; }
@@ -95,7 +90,20 @@ export default function AdminCategoriesPage() {
   const [activeTab, setActiveTab] = useState<Tab>("categories");
 
   // Categories state
-  const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
+  const [categories, setCategories] = useState<CategoryItem[]>(() => {
+    if (typeof window !== "undefined") {
+      return getAdminCategories();
+    }
+    return INITIAL_CATEGORIES;
+  });
+
+  const updateAndSaveCategories = (updater: (prev: CategoryItem[]) => CategoryItem[]) => {
+    setCategories((prev) => {
+      const next = updater(prev);
+      saveAdminCategories(next);
+      return next;
+    });
+  };
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CategoryItem | null>(null);
@@ -139,19 +147,19 @@ export default function AdminCategoriesPage() {
     if (!name.trim()) { toast.error("Please enter a category name"); return; }
     const pid = parentId === "none" ? null : parentId;
     if (editingItem) {
-      setCategories(prev => prev.map(item => item.id === editingItem.id
+      updateAndSaveCategories(prev => prev.map(item => item.id === editingItem.id
         ? { ...item, name, slug: slug || name.toLowerCase().replace(/\s+/g, "-"), parentId: pid, order: Number(order) || 1, description: desc, img: imgUrl || item.img || "/logo.png" }
         : item));
       toast.success(`"${name}" updated.`);
     } else {
-      setCategories(prev => [...prev, { id: `cat-${Date.now()}`, name, slug: slug || name.toLowerCase().replace(/\s+/g, "-"), parentId: pid, order: Number(order) || 1, description: desc || "Handcrafted collection", img: imgUrl || "/logo.png", itemCount: 0 }]);
+      updateAndSaveCategories(prev => [...prev, { id: `cat-${Date.now()}`, name, slug: slug || name.toLowerCase().replace(/\s+/g, "-"), parentId: pid, order: Number(order) || 1, description: desc || "Handcrafted collection", img: imgUrl || "/logo.png", itemCount: 0 }]);
       toast.success(`"${name}" added.`);
     }
     setModalOpen(false);
   };
   const handleDelete = (id: string, n: string) => {
     if (confirm(`Delete category "${n}"?`)) {
-      setCategories(prev => prev.filter(item => item.id !== id && item.parentId !== id));
+      updateAndSaveCategories(prev => prev.filter(item => item.id !== id && item.parentId !== id));
       toast.success(`Deleted "${n}"`);
     }
   };

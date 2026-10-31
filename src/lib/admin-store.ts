@@ -253,9 +253,95 @@ export function getAdminOrders(): AdminOrder[] {
   }
 }
 
+export function mapAdminStatusToCustomer(
+  adminStatus: AdminOrder["status"]
+): "Pending" | "Confirmed" | "Processing" | "Dispatched" | "Delivered" | "Cancelled" {
+  switch (adminStatus) {
+    case "PENDING":
+      return "Pending";
+    case "CONFIRMED":
+      return "Confirmed";
+    case "PROCESSING":
+      return "Processing";
+    case "DISPATCHED":
+      return "Dispatched";
+    case "COMPLETED":
+      return "Delivered";
+    case "CANCELLED":
+      return "Cancelled";
+    default:
+      return "Pending";
+  }
+}
+
+export function mapCustomerStatusToAdmin(custStatus: string): AdminOrder["status"] {
+  const upper = (custStatus || "").toUpperCase().trim();
+  if (upper === "DELIVERED") return "COMPLETED";
+  if (["PENDING", "CONFIRMED", "PROCESSING", "DISPATCHED", "COMPLETED", "CANCELLED"].includes(upper)) {
+    return upper as AdminOrder["status"];
+  }
+  return "PENDING";
+}
+
 export function saveAdminOrders(orders: AdminOrder[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+
+  // 1. Sync to fcc_all_orders so website order registries stay aligned
+  try {
+    const rawAll = localStorage.getItem("fcc_all_orders");
+    if (rawAll) {
+      const allOrders = JSON.parse(rawAll);
+      if (Array.isArray(allOrders)) {
+        const orderStatusMap = new Map(
+          orders.map((o) => [o.orderRef.toLowerCase().trim(), mapAdminStatusToCustomer(o.status)])
+        );
+        const updatedAll = allOrders.map((ao: any) => {
+          const ref = (ao.orderNumber || ao.id || "").toLowerCase().trim();
+          if (orderStatusMap.has(ref)) {
+            return { ...ao, status: orderStatusMap.get(ref) };
+          }
+          return ao;
+        });
+        localStorage.setItem("fcc_all_orders", JSON.stringify(updatedAll));
+      }
+    }
+  } catch (err) {
+    console.warn("Could not sync to fcc_all_orders:", err);
+  }
+
+  // 2. Sync to fcc_users_db so customer profile orders update immediately
+  try {
+    const rawUsers = localStorage.getItem("fcc_users_db");
+    if (rawUsers) {
+      const usersDB = JSON.parse(rawUsers);
+      const orderStatusMap = new Map(
+        orders.map((o) => [o.orderRef.toLowerCase().trim(), mapAdminStatusToCustomer(o.status)])
+      );
+      let modified = false;
+
+      for (const email of Object.keys(usersDB)) {
+        const u = usersDB[email];
+        if (u && Array.isArray(u.orders)) {
+          u.orders = u.orders.map((uo: any) => {
+            const ref = (uo.orderNumber || uo.id || "").toLowerCase().trim();
+            if (orderStatusMap.has(ref)) {
+              modified = true;
+              return { ...uo, status: orderStatusMap.get(ref) };
+            }
+            return uo;
+          });
+        }
+      }
+
+      if (modified) {
+        localStorage.setItem("fcc_users_db", JSON.stringify(usersDB));
+      }
+    }
+  } catch (err) {
+    console.warn("Could not sync to fcc_users_db:", err);
+  }
+
   try {
     window.dispatchEvent(new CustomEvent("admin_orders_updated", { detail: orders }));
   } catch {}
@@ -486,5 +572,174 @@ export function setActiveAdminRole(role: AdminRoleType) {
   localStorage.setItem(STORAGE_KEY_ROLE, role);
   try {
     window.dispatchEvent(new CustomEvent("admin_role_changed", { detail: role }));
+  } catch {}
+}
+
+// ─── Master Data / Categories ────────────────────────────────────────────────
+export interface CategoryItem {
+  id: string;
+  name: string;
+  slug: string;
+  order: number;
+  parentId?: string | null;
+  img?: string;
+  description?: string;
+  itemCount?: number;
+}
+
+export const INITIAL_CATEGORIES: CategoryItem[] = [
+  { id: "cat-1", name: "Resin Creations", slug: "resin-creations", order: 1, parentId: null, img: "/485184284_1103127648493148_4472142601649408182_n.jpg", description: "Coasters, ocean wave wall decor, floral resin slabs, customized trays", itemCount: 18 },
+  { id: "cat-1-1", name: "Resin Coasters & Trays", slug: "resin-coasters-trays", order: 1, parentId: "cat-1", img: "/485184284_1103127648493148_4472142601649408182_n.jpg", description: "Ocean geode coasters, gold foil rim trays, floral drink coasters", itemCount: 8 },
+  { id: "cat-1-2", name: "Resin Alphabet Keychains", slug: "resin-keychains", order: 2, parentId: "cat-1", img: "/542752181_1238639424941969_1583669488507158905_n.jpg", description: "Personalized alphabet letters, glitter pendants, hearts & custom names", itemCount: 26 },
+  { id: "cat-1-3", name: "Resin Wall Art & Clocks", slug: "resin-wall-art-clocks", order: 3, parentId: "cat-1", img: "/529179520_1214465350692710_3362134301413191237_n.jpg", description: "Hand-poured resin wall clocks, ocean waves and geode canvas panels", itemCount: 6 },
+  { id: "cat-1-4", name: "Resin Bookmarks & Charms", slug: "resin-bookmarks-charms", order: 4, parentId: "cat-1", img: "/626581418_1362772269195350_2007381266795301988_n.jpg", description: "Pressed flower bookmarks, tassel tags and pocket charms", itemCount: 7 },
+  { id: "cat-2", name: "Wedding Stationery", slug: "wedding-stationery", order: 2, parentId: null, img: "/468396156_2478270609044241_1138043242894587302_n.jpg", description: "Custom romantic suites, envelopes, wax seals, floral stationery", itemCount: 14 },
+  { id: "cat-2-1", name: "Wedding Invitations & Cards", slug: "wedding-invitations", order: 1, parentId: "cat-2", img: "/468396156_2478270609044241_1138043242894587302_n.jpg", description: "Luxury foil-pressed, laser-cut and calligraphy wedding invitations", itemCount: 14 },
+  { id: "cat-2-2", name: "Wedding Cake Boxes", slug: "cake-boxes", order: 2, parentId: "cat-2", img: "/484074106_1098277412311505_6713907112004454121_n.jpg", description: "Embossed gold rose boxes, satin ribbons, wedding cake packaging", itemCount: 16 },
+  { id: "cat-2-3", name: "Ring Dishes & Keepsakes", slug: "ring-dishes-keepsakes", order: 3, parentId: "cat-2", img: "/485184284_1103127648493148_4472142601649408182_n.jpg", description: "Personalized resin wedding ring platters and ceramic dishes", itemCount: 5 },
+  { id: "cat-3", name: "Custom Frames", slug: "custom-frames", order: 3, parentId: null, img: "/529179520_1214465350692710_3362134301413191237_n.jpg", description: "Anniversary LED shadow boxes, memory frames with resin lettering", itemCount: 12 },
+  { id: "cat-3-1", name: "Anniversary & Couple Frames", slug: "anniversary-couple-frames", order: 1, parentId: "cat-3", img: "/529179520_1214465350692710_3362134301413191237_n.jpg", description: "Custom date & photo frames, LED warm backlight memory displays", itemCount: 8 },
+  { id: "cat-3-2", name: "Graduation & Birthday Frames", slug: "graduation-birthday-frames", order: 2, parentId: "cat-3", img: "/557802403_1265990468873531_7381377988699630798_n.jpg", description: "Milestone photo collage frames with handmade paper flowers", itemCount: 4 },
+  { id: "cat-4", name: "Gift Boxes & Hampers", slug: "gifts", order: 4, parentId: null, img: "/logo.png", description: "Curated gift hampers for bridesmaids, groomsmen, and special milestones", itemCount: 9 },
+  { id: "cat-4-1", name: "Bridesmaid & Bridal Hampers", slug: "bridal-hampers", order: 1, parentId: "cat-4", img: "/logo.png", description: "Custom luxury keepsake gift boxes with personalized robe tags", itemCount: 5 },
+  { id: "cat-4-2", name: "Corporate & Event Favors", slug: "corporate-event-favors", order: 2, parentId: "cat-4", img: "/logo.png", description: "Bulk branded favor boxes and resin keepsake tokens", itemCount: 4 },
+];
+
+const STORAGE_KEY_CATEGORIES = "admin_categories";
+
+export function getAdminCategories(): CategoryItem[] {
+  if (typeof window === "undefined") return INITIAL_CATEGORIES;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CATEGORIES);
+    if (!raw) return INITIAL_CATEGORIES;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_CATEGORIES;
+  } catch {
+    return INITIAL_CATEGORIES;
+  }
+}
+
+export function saveAdminCategories(cats: CategoryItem[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(cats));
+  try {
+    window.dispatchEvent(new CustomEvent("admin_categories_updated", { detail: cats }));
+  } catch {}
+}
+
+// ─── Delivery & Courier Rates ───────────────────────────────────────────────
+export interface DeliverySettings {
+  codEnabled: boolean;
+  bankTransferEnabled: boolean;
+  colomboFee: number;
+  outstationFee: number;
+  freeShippingThreshold: number;
+  courierPartner: string;
+  processingDays: string;
+}
+
+export const DEFAULT_DELIVERY_SETTINGS: DeliverySettings = {
+  codEnabled: true,
+  bankTransferEnabled: true,
+  colomboFee: 350,
+  outstationFee: 450,
+  freeShippingThreshold: 15000,
+  courierPartner: "Pronto / Domex / PromptX",
+  processingDays: "2–3",
+};
+
+const STORAGE_KEY_DELIVERY = "admin_delivery_settings";
+
+export function getDeliverySettings(): DeliverySettings {
+  if (typeof window === "undefined") return DEFAULT_DELIVERY_SETTINGS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DELIVERY);
+    if (!raw) return DEFAULT_DELIVERY_SETTINGS;
+    return { ...DEFAULT_DELIVERY_SETTINGS, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_DELIVERY_SETTINGS;
+  }
+}
+
+export function saveDeliverySettings(settings: DeliverySettings) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY_DELIVERY, JSON.stringify(settings));
+  try {
+    window.dispatchEvent(new CustomEvent("admin_delivery_updated", { detail: settings }));
+  } catch {}
+}
+
+// ─── Promotions & Offers ────────────────────────────────────────────────────
+export interface PromoCode {
+  id: string;
+  code: string;
+  discountType: "percentage" | "fixed" | "shipping";
+  discountValue: number;
+  minOrder: number;
+  description: string;
+  isActive: boolean;
+  usageCount: number;
+}
+
+export const DEFAULT_PROMOS: PromoCode[] = [
+  {
+    id: "promo-1",
+    code: "CREATIVE10",
+    discountType: "percentage",
+    discountValue: 10,
+    minOrder: 5000,
+    description: "10% OFF on orders above LKR 5,000",
+    isActive: true,
+    usageCount: 14,
+  },
+  {
+    id: "promo-2",
+    code: "1STCLASS500",
+    discountType: "fixed",
+    discountValue: 500,
+    minOrder: 10000,
+    description: "LKR 500 OFF on orders above LKR 10,000",
+    isActive: true,
+    usageCount: 7,
+  },
+  {
+    id: "promo-3",
+    code: "FREESHIP",
+    discountType: "shipping",
+    discountValue: 0,
+    minOrder: 15000,
+    description: "Free Shipping on orders above LKR 15,000",
+    isActive: false,
+    usageCount: 3,
+  },
+  {
+    id: "promo-4",
+    code: "BESPOKE20",
+    discountType: "percentage",
+    discountValue: 20,
+    minOrder: 8000,
+    description: "20% OFF bespoke handcraft orders above LKR 8,000",
+    isActive: true,
+    usageCount: 5,
+  },
+];
+
+const STORAGE_KEY_PROMOS = "admin_promo_codes";
+
+export function loadPromos(): PromoCode[] {
+  if (typeof window === "undefined") return DEFAULT_PROMOS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PROMOS);
+    return raw ? JSON.parse(raw) : DEFAULT_PROMOS;
+  } catch {
+    return DEFAULT_PROMOS;
+  }
+}
+
+export function savePromos(promos: PromoCode[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY_PROMOS, JSON.stringify(promos));
+  try {
+    window.dispatchEvent(new CustomEvent("admin_promotions_updated", { detail: promos }));
   } catch {}
 }

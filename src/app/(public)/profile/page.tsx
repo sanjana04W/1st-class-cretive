@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCustomerProfile } from "@/context/CustomerProfileContext";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { User, Package, MapPin, Phone, Mail, Clock, CheckCircle2, ShoppingBag, LogOut, Edit3 } from "lucide-react";
 import { formatLKR } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { getAdminOrders, mapAdminStatusToCustomer } from "@/lib/admin-store";
 
 const SRI_LANKA_DISTRICTS = [
   "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", "Nuwara Eliya",
@@ -23,6 +24,21 @@ export default function ProfilePage() {
 
   const [activeTab, setActiveTab] = useState<"orders" | "details">("orders");
   const [isEditing, setIsEditing] = useState(false);
+  const [adminOrders, setAdminOrders] = useState(() =>
+    typeof window !== "undefined" ? getAdminOrders() : []
+  );
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setAdminOrders(getAdminOrders());
+    };
+    window.addEventListener("admin_orders_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("admin_orders_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
 
   // Form states
   const [name, setName] = useState(profile.name);
@@ -184,7 +200,36 @@ export default function ProfilePage() {
                 </Link>
               </div>
             ) : (
-              profile.orders.map((ord) => (
+              profile.orders.map((ord) => {
+                const matchedAdmin = adminOrders.find(
+                  (a) =>
+                    a.orderRef.toLowerCase().trim() === (ord.orderNumber || "").toLowerCase().trim()
+                );
+                const currentStatus = matchedAdmin
+                  ? mapAdminStatusToCustomer(matchedAdmin.status)
+                  : ord.status;
+
+                const getStatusBadge = (st: string) => {
+                  const s = (st || "").toLowerCase();
+                  if (s === "confirmed") {
+                    return "bg-blue-50 text-blue-700 border border-blue-200";
+                  }
+                  if (s === "processing") {
+                    return "bg-indigo-50 text-indigo-700 border border-indigo-200";
+                  }
+                  if (s === "dispatched") {
+                    return "bg-purple-50 text-purple-700 border border-purple-200";
+                  }
+                  if (s === "delivered" || s === "completed") {
+                    return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+                  }
+                  if (s === "cancelled") {
+                    return "bg-rose-50 text-rose-700 border border-rose-200";
+                  }
+                  return "bg-amber-50 text-amber-800 border border-amber-200";
+                };
+
+                return (
                 <div
                   key={ord.id}
                   className="bg-white rounded-3xl p-6 border border-[#EFECE6] shadow-xs space-y-4 hover:border-[#C9A84C]/50 transition-all"
@@ -201,15 +246,11 @@ export default function ProfilePage() {
 
                     <div className="flex items-center gap-3">
                       <span
-                        className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
-                          ord.status === "Delivered"
-                            ? "bg-green-100 text-green-800"
-                            : ord.status === "Processing"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
+                        className={`text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${getStatusBadge(
+                          currentStatus
+                        )}`}
                       >
-                        {ord.status}
+                        {currentStatus}
                       </span>
                       <span className="font-heading font-bold text-sm text-[#9A7A2E]">
                         {formatLKR(ord.total)}
@@ -256,7 +297,8 @@ export default function ProfilePage() {
                     </a>
                   </div>
                 </div>
-              ))
+              );
+            })
             )}
           </div>
         )}
